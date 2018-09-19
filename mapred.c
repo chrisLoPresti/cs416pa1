@@ -7,7 +7,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-/* sample input 
+/* 
+sample input 
 
 mapred –-app [wordcount, sort] –-impl [procs, threads] --maps num_maps –-reduces num_reduces --input infile –-output outfile
 */
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
     //if we could not create the file let them know and exit(EXIT_FAILURE)
     if (output < 0)
     {
-        printf("We were unable to open your output file. Either there was an error creating it, or it already exists and we do not have permission to open it.");
+        printf("We were unable to open your output file. Either there was an error creating it, or it already exists and we do not have permission to open it.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -52,7 +53,8 @@ int main(int argc, char **argv)
     //make sure the application type is valid
     if (strcmp(application, "wordcount") != 0 && strcmp(application, "sort") != 0)
     {
-        printf("You entered an invalid --app.\nValid options=>\nwordcount\nsort\nPlease try again with a valid option.");
+        printf("You entered an invalid --app.\nValid options=>\nwordcount\nsort\nPlease try again with a valid option.\n");
+        exit(EXIT_FAILURE);
     }
 
     //get the implementation method(procs, threads, extra)
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
     //make sure the implementation type is valid
     if (strcmp(implementation, "procs") != 0 && strcmp(implementation, "threads") != 0 && strcmp(implementation, "extra") != 0)
     {
-        printf("You entered an invalid --impl.\nValid options=>\nprocs\threads\nextra\nPlease try again with a valid option.");
+        printf("You entered an invalid --impl.\nValid options=>\nprocs\nthreads\nextra\nPlease try again with a valid option.\n");
         exit(EXIT_FAILURE);
     }
 
