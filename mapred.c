@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     //if we couldn"t open the file let the user know it doesnt exist
     if (input < 0)
     {
-        printf("We were unable to open your input file. Please check to make sure that file exists. Or confirm the spelling.\n");
+        printf("We were unable to open your input file. Please check to make sure that file exists, or confirm the spelling.\n");
         exit(EXIT_FAILURE);
     }
     //lets create the output file
