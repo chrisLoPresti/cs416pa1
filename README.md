@@ -29,4 +29,10 @@ Or if using the extra credit:
 <br/>
 ./mapred [-wordcount,-sort][-extra] -[num_threads] [-infile][-outfile]
 <br/>
+<br/>
+Here is a working example with the provided code:
+<br/>
+./mapred -wordcount -procs -4 -4 -sort.csv -results.txt
+<br/>
+<br/>
 The code should run!
