@@ -127,48 +127,14 @@ void parseInputFile()
 //helper function to store all of the keys from the file
 inputData *insertInput(inputData *keys, char *temp)
 {
-    //if keys is null lets create the first key
-    if (keys == NULL)
-    {
-        //create memory for it
-        keys = (inputData *)malloc(sizeof(inputData));
-        //if we were unable to create memory for it let the user know and exit
-        if (keys == NULL)
-        {
-            printf("Error storing input word\n");
-            exit(EXIT_FAILURE);
-        }
-        //fill in the keys attributes
-        keys->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
-        strcpy(keys->word, temp);
-        keys->word[strlen(keys->word)] = '\0';
-        keys->next = NULL;
-        ++keysCount;
-    }
-    else
-    {
-        //create a tempKey pointer so we can itterate through the leys without loosing our pointer to the start
-        inputData *tempData = keys;
-        //traverse through our keys until we find the second to last key
-        while (tempData->next != NULL)
-        {
-            tempData = tempData->next;
-        }
-        //create memory for it
-        tempData->next = (inputData *)malloc(sizeof(inputData));
-        //if we were unable to create memory for it let the user know and exit
-        if (tempData->next == NULL)
-        {
-            printf("Error storing input word\n");
-            exit(EXIT_FAILURE);
-        }
-        //fill in the keys attributes
-        tempData->next->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
-        strcpy(tempData->next->word, temp);
-        tempData->next->word[strlen(tempData->next->word)] = '\0';
-        tempData->next->next = NULL;
-        ++keysCount;
-    }
+    //insert at the front to make it faster
+    inputData *tempData = (inputData *)malloc(sizeof(inputData));
+    tempData->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
+    strcpy(tempData->word, temp);
+    tempData->word[strlen(tempData->word)] = '\0';
+    tempData->next = keys;
+    ++keysCount;
+    keys = tempData;
     return keys;
 }
 
