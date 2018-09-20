@@ -206,8 +206,6 @@ int main(int argc, char **argv)
     //parse the input file and collect all of the data from it
     parseInputFile();
 
-
-
     //not important, this is just to see whether or not we read in data succesfully
     while (values != NULL)
     {
