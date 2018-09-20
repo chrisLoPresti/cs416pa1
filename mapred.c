@@ -99,6 +99,7 @@ void parseInputFile()
             for (char *p = temp; *p; ++p)
                 *p = tolower(*p);
             keys = insertInput(keys, temp);
+            //reset temp so we can build a fresh word
             temp = realloc(temp, 0);
         }
     }
@@ -111,12 +112,15 @@ void parseInputFile()
             *p = tolower(*p);
         keys = insertInput(keys, temp);
     }
+    //if there are no keys the file was empty
     if (keys == NULL)
     {
         printf("The input file was empty, or there was an error reading from it\n");
         exit(EXIT_FAILURE);
     }
+    //free temp as we no longer need it
     free(temp);
+    //close the file as we no longer need it
     close(input);
 }
 
