@@ -65,9 +65,9 @@ static FILE *input;
 //our output file
 static int output;
 //a linked list of all the input data
-static inputData *values = NULL;
+static inputData *keys;
 //count of the total number of inputs (words or numbers)
-static int valuesCount;
+static int keysCount;
 
 //helper function to parse the input file
 void parseInputFile()
@@ -79,31 +79,32 @@ void parseInputFile()
         temp = (char *)malloc(sizeof(char) * strlen(line) + 1);
         strcpy(temp, line);
         temp[strlen(temp)] = '\0';
-        values = insertInput(values, temp);
+        //make a call to save the input key into memory
+        keys = insertInput(keys, temp);
     }
     fclose(input);
 }
 
-//helper function to store all of the words or numbers from the file
-inputData *insertInput(inputData *values, char *temp)
+//helper function to store all of the keys from the file
+inputData *insertInput(inputData *keys, char *temp)
 {
-    if (values == NULL)
+    if (keys == NULL)
     {
-        values = (inputData *)malloc(sizeof(inputData));
-        if (values == NULL)
+        keys = (inputData *)malloc(sizeof(inputData));
+        if (keys == NULL)
         {
             printf("Error storing input word\n");
             exit(EXIT_FAILURE);
         }
-        values->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
-        strcpy(values->word, temp);
-        values->word[strlen(values->word)] = '\0';
-        values->next = NULL;
-        ++valuesCount;
+        keys->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
+        strcpy(keys->word, temp);
+        keys->word[strlen(keys->word)] = '\0';
+        keys->next = NULL;
+        ++keysCount;
     }
     else
     {
-        inputData *tempData = values;
+        inputData *tempData = keys;
         while (tempData->next != NULL)
         {
             tempData = tempData->next;
@@ -118,9 +119,9 @@ inputData *insertInput(inputData *values, char *temp)
         strcpy(tempData->next->word, temp);
         tempData->next->word[strlen(tempData->next->word)] = '\0';
         tempData->next->next = NULL;
-        ++valuesCount;
+        ++keysCount;
     }
-    return values;
+    return keys;
 }
 
 int main(int argc, char **argv)
@@ -199,7 +200,7 @@ int main(int argc, char **argv)
         //make sure it is a valid number
         if (numThreads == 0)
         {
-            printf("You entered an invalid --reduces value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --num_threads value of 0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -207,12 +208,12 @@ int main(int argc, char **argv)
     parseInputFile();
 
     //not important, this is just to see whether or not we read in data succesfully
-    while (values != NULL)
+    while (keys != NULL)
     {
-        printf("%s\n", values->word);
-        values = values->next;
+        printf("%s\n", keys->word);
+        keys = keys->next;
     }
-    printf("%d\n", valuesCount);
+    printf("%d\n", keysCount);
 
     return 0;
 }

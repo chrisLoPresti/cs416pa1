@@ -14,13 +14,5 @@ struct inputData
     
 }typedef inputData;
 
-struct keys
-{
-    char * word;
-    int count;
-    struct keys *next;
-    
-}typedef keys;
-
 inputData * insertInput(inputData *, char*);
 void parseInputFile();
