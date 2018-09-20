@@ -1,1 +1,2 @@
-hello this is a test to see if we can print all of the words in the file
+HellO tHis A a test to sEe if We        
+can pRInt all of the wor////ds in the fi!e

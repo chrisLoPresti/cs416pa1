@@ -78,7 +78,7 @@ void parseInputFile()
     char singleChar;
     while (read(input, &singleChar, 1) != 0)
     {
-        if (isalpha(singleChar))
+        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != 0)
         {
             temp = realloc(temp, strlen(temp) + 2);
             temp[strlen(temp)] = singleChar;
@@ -86,11 +86,21 @@ void parseInputFile()
             continue;
         }
         //make a call to save the input key into memory
-        keys = insertInput(keys, temp);
-        temp = realloc(temp, 0);
+        if (strlen(temp) > 0)
+        {
+            for (char *p = temp; *p; ++p)
+                *p = tolower(*p);
+            keys = insertInput(keys, temp);
+            temp = realloc(temp, 0);
+        }
     }
-    keys = insertInput(keys, temp);
-    temp = realloc(temp, 0);
+    if (strlen(temp) > 0)
+    {
+        for (char *p = temp; *p; ++p)
+            *p = tolower(*p);
+        keys = insertInput(keys, temp);
+    }
+    free(temp);
     close(input);
 }
 
