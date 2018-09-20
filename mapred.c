@@ -92,7 +92,7 @@ void parseInputFile()
         }
         //make a call to save the input key into memory IFF the key is a non-empyt string
         //for example, if singleChar = ' ' it is not valid, and temp will not have been built
-        //temp is not NULL because it points to valid memory, but it hold no characters, so check its length
+        //temp is not NULL because it points to valid memory, but it holds no characters, so check its length
         if (strlen(temp) > 0)
         {
             //we verified that the string is a valid key, so convert it to lowercase and insert it to memory
@@ -221,7 +221,8 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    if (argc == 7)
+    //validate to make sure we have the correct input amount matching our implementation
+    if (argc == 7 && (strcmp(implementation, "-procs") == 0 || strcmp(implementation, "-threads") == 0))
     {
         //lets get the number of maps
         maps = atoi(++argv[3]);
@@ -241,16 +242,22 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-    else
+    else if (argc == 6 && strcmp(implementation, "-extra") == 0)
     {
         // lets get the number of threads
-        numThreads = atoi(++argv[4]);
+        numThreads = atoi(++argv[3]);
         //make sure it is a valid number
         if (numThreads == 0)
         {
             printf("You entered an invalid --num_threads value of 0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
+    }
+    //if the input stream is invalid let them know
+    else
+    {
+        printf("Please make sure to have 6 or 7 inputs\n 7: ./mapred –-app [-wordcount, -sort] –-impl [-procs, -threads] --maps -[num_maps] –-reduces -[num_reduces] --input [-infile] –-output [-outfile]\n  6: ./mapred –-app [-wordcount, -sort] –-impl [-extra] --numthreads -[num] --input [-infile] –-output [-outfile]\n");
+        exit(EXIT_FAILURE);
     }
     //parse the input file and collect all of the data from it
     parseInputFile();
