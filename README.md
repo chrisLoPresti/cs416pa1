@@ -23,6 +23,10 @@ First type "make" or "Make" to complie the code using the Makefile that is provi
 <br/>
 Then type:
 <br/>
-./mapred [-wordcount,-sort][-procs, -threads] -4 -4 [-infile][-outfile]
+./mapred [-wordcount,-sort][-procs, -threads] -[num_maps] -[num_reduces] [-infile][-outfile]
+<br/>
+Or if using the extra credit:
+<br/>
+./mapred [-wordcount,-sort][-extra] -[num_threads] [-infile][-outfile]
 <br/>
 The code should run!
