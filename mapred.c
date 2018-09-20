@@ -89,6 +89,8 @@ void parseInputFile()
         keys = insertInput(keys, temp);
         temp = realloc(temp, 0);
     }
+    keys = insertInput(keys, temp);
+    temp = realloc(temp, 0);
     close(input);
 }
 
