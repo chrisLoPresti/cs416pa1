@@ -74,31 +74,47 @@ static int keysCount;
 //helper function to parse the input file
 void parseInputFile()
 {
+    //temp is going to be our string that continues to be built from valid characters
     char *temp = (char *)malloc(sizeof(char) * 2);
+    //singleChar is what we will recieve from the input file
     char singleChar;
+    //while we are able to read a character ...
     while (read(input, &singleChar, 1) != 0)
     {
+        //check to make sure the character is valid, if not its considered a key seperator
         if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != 0)
         {
+            //resize the string to hold one more character and append the singleChar to it
             temp = realloc(temp, strlen(temp) + 2);
             temp[strlen(temp)] = singleChar;
             temp[strlen(temp) + 1] = '\0';
             continue;
         }
-        //make a call to save the input key into memory
+        //make a call to save the input key into memory IFF the key is a non-empyt string
+        //for example, if singleChar = ' ' it is not valid, and temp will not have been built
+        //temp is not NULL because it points to valid memory, but it hold no characters, so check its length
         if (strlen(temp) > 0)
         {
+            //we verified that the string is a valid key, so convert it to lowercase and insert it to memory
             for (char *p = temp; *p; ++p)
                 *p = tolower(*p);
             keys = insertInput(keys, temp);
             temp = realloc(temp, 0);
         }
     }
+    //same rules apply -> this last check is for the very final word in the file
+    //we have a seperate check because the while condition was broken, meaning we hit EOF
+    //we may have also read nothing, meaning the file is empty in which case we should let the user know
     if (strlen(temp) > 0)
     {
         for (char *p = temp; *p; ++p)
             *p = tolower(*p);
         keys = insertInput(keys, temp);
+    }
+    if (keys == NULL)
+    {
+        printf("The input file was empty, or there was an error reading from it\n");
+        exit(EXIT_FAILURE);
     }
     free(temp);
     close(input);
@@ -107,14 +123,18 @@ void parseInputFile()
 //helper function to store all of the keys from the file
 inputData *insertInput(inputData *keys, char *temp)
 {
+    //if keys is null lets create the first key
     if (keys == NULL)
     {
+        //create memory for it
         keys = (inputData *)malloc(sizeof(inputData));
+        //if we were unable to create memory for it let the user know and exit
         if (keys == NULL)
         {
             printf("Error storing input word\n");
             exit(EXIT_FAILURE);
         }
+        //fill in the keys attributes
         keys->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
         strcpy(keys->word, temp);
         keys->word[strlen(keys->word)] = '\0';
@@ -123,17 +143,22 @@ inputData *insertInput(inputData *keys, char *temp)
     }
     else
     {
+        //create a tempKey pointer so we can itterate through the leys without loosing our pointer to the start
         inputData *tempData = keys;
+        //traverse through our keys until we find the second to last key
         while (tempData->next != NULL)
         {
             tempData = tempData->next;
         }
+        //create memory for it
         tempData->next = (inputData *)malloc(sizeof(inputData));
+        //if we were unable to create memory for it let the user know and exit
         if (tempData->next == NULL)
         {
             printf("Error storing input word\n");
             exit(EXIT_FAILURE);
         }
+        //fill in the keys attributes
         tempData->next->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
         strcpy(tempData->next->word, temp);
         tempData->next->word[strlen(tempData->next->word)] = '\0';
