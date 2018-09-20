@@ -42,11 +42,13 @@ do one last final combine phase to combine anything across reducer outputes
 */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "mapred.h"
@@ -61,7 +63,7 @@ static int reduces;
 //and the number of maps
 static int maps;
 //our input file
-static FILE *input;
+static int input;
 //our output file
 static int output;
 //a linked list of all the input data
@@ -72,17 +74,22 @@ static int keysCount;
 //helper function to parse the input file
 void parseInputFile()
 {
-    char *temp;
-    char line[2560];
-    while (fscanf(input, "%s", line) != EOF)
+    char *temp = (char *)malloc(sizeof(char) * 2);
+    char singleChar;
+    while (read(input, &singleChar, 1) != 0)
     {
-        temp = (char *)malloc(sizeof(char) * strlen(line) + 1);
-        strcpy(temp, line);
-        temp[strlen(temp)] = '\0';
+        if (isalpha(singleChar))
+        {
+            temp = realloc(temp, strlen(temp) + 2);
+            temp[strlen(temp)] = singleChar;
+            temp[strlen(temp) + 1] = '\0';
+            continue;
+        }
         //make a call to save the input key into memory
         keys = insertInput(keys, temp);
+        temp = realloc(temp, 0);
     }
-    fclose(input);
+    close(input);
 }
 
 //helper function to store all of the keys from the file
@@ -134,11 +141,11 @@ int main(int argc, char **argv)
     }
 
     //before doing anything lets check if these files names exist/ are taken
-    input = argc == 7 ? fopen(++argv[5], "r") : fopen(++argv[4], "r");
+    input = argc == 7 ? open(++argv[5], O_RDONLY) : open(++argv[4], O_RDONLY);
     //if we couldn"t open the file let the user know it doesnt exist
-    if (input == NULL)
+    if (input < 0)
     {
-        fclose(input);
+        close(input);
         printf("We were unable to open your input file. Please check to make sure that file exists, or confirm the spelling.\n Please use the form -[file name]\n");
         exit(EXIT_FAILURE);
     }
