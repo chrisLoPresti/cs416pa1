@@ -25,6 +25,6 @@ struct node
 inputData * insertInput(inputData *, char*);
 void parseInputFile();
 
-// functions used forsorting
+// functions used for sorting
 node *sort(node *);
 void testSort();
