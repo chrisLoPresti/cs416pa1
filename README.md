@@ -44,7 +44,7 @@ Splitter creates buckets, and each bucket has a list of keys.
 The splitter will give the list of keys:
 <br/>
 <br/>
-Markup: 'code()'
+'code()'
 struct inputData
 {
 char *word;
