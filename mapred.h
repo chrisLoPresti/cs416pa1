@@ -14,5 +14,17 @@ struct inputData
     
 }typedef inputData;
 
+struct node
+{
+    char * word;
+    int count;
+    struct node *next;
+    
+}typedef node;
+
 inputData * insertInput(inputData *, char*);
 void parseInputFile();
+
+// functions used forsorting
+node *sort(node *);
+void testSort();
