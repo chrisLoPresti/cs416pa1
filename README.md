@@ -44,13 +44,16 @@ Splitter creates buckets, and each bucket has a list of keys.
 The splitter will give the list of keys:
 <br/>
 <br/>
-'code()'
+
+```c
 struct inputData
 {
 char *word;
 struct inputData *next;
 
 } typedef inputData;
+```
+
 <br/>
 <br/>
 from there the map will recieve ...TBD
