@@ -70,7 +70,6 @@ static int output;
 static inputData *keys;
 //buckets to split our input keys
 static bucket *buckets;
-int createdBuckets;
 static bucket *head;
 //count of the total number of inputs (words or numbers)
 static int keysCount;
