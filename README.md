@@ -23,11 +23,11 @@ First type "make" or "Make" to complie the code using the Makefile that is provi
 <br/>
 Then type:
 <br/>
-./mapred [-wordcount,-sort][-procs, -threads] -[num_maps] -[num_reduces] [-infile][-outfile]
+./mapred [-wordcount,-sort][-procs, -threads] -[num_maps] -[num_reduces][-infile][-outfile]
 <br/>
 Or if using the extra credit:
 <br/>
-./mapred [-wordcount,-sort][-extra] -[num_threads] [-infile][-outfile]
+./mapred [-wordcount,-sort][-extra] -[num_threads][-infile][-outfile]
 <br/>
 <br/>
 Here is a working example with the provided code:
@@ -36,3 +36,21 @@ Here is a working example with the provided code:
 <br/>
 <br/>
 The code should run!
+
+## Contracts --important
+
+Splitter creates buckets, and each bucket has a list of keys.
+
+The splitter will give the list of keys:
+<br/>
+<br/>
+Markup: 'code()'
+struct inputData
+{
+char *word;
+struct inputData *next;
+
+} typedef inputData;
+<br/>
+<br/>
+from there the map will recieve ...TBD
