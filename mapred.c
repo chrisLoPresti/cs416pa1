@@ -68,74 +68,96 @@ static int input;
 static int output;
 //a linked list of all the input data
 static inputData *keys;
+//buckets to split our input keys
+static bucket *buckets;
+int createdBuckets;
+static bucket *head;
 //count of the total number of inputs (words or numbers)
 static int keysCount;
 
 //helper function to parse the input file
 void parseInputFile()
 {
+    //determine which number to use
+    int totalMapsOrExtra = maps ? maps - 1 : numThreads - 1;
     //temp is going to be our string that continues to be built from valid characters
-    char *temp = (char *)malloc(sizeof(char) * 2);
-    //singleChar is what we will recieve from the input file
+    char *temp = (char *)malloc(sizeof(char) * 2); //singleChar is what we will recieve from the input file
     char singleChar;
+    int max = 0;
     //while we are able to read a character ...
     while (read(input, &singleChar, 1) != 0)
     {
         //check to make sure the character is valid, if not its considered a key seperator
-        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != 0)
+        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != '\r' && singleChar != 0)
         {
             //resize the string to hold one more character and append the singleChar to it
-            temp = realloc(temp, strlen(temp) + 2);
+            temp = realloc(temp, strlen(temp) + 1);
             temp[strlen(temp)] = singleChar;
             temp[strlen(temp) + 1] = '\0';
             continue;
         }
         //make a call to save the input key into memory IFF the key is a non-empyt string
-        //for example, if singleChar = ' ' it is not valid, and temp will not have been built
-        //temp is not NULL because it points to valid memory, but it holds no characters, so check its length
         if (strlen(temp) > 0)
         {
-            //we verified that the string is a valid key, so convert it to lowercase and insert it to memory
+            // //we verified that the string is a valid key, so convert it to lowercase and insert it to memory
             for (char *p = temp; *p; ++p)
                 *p = tolower(*p);
-            keys = insertInput(keys, temp);
-            //reset temp so we can build a fresh word
-            temp = realloc(temp, 0);
+            buckets = insertInput(buckets, temp);
+            // //reset temp so we can build a fresh word
+            temp = realloc(NULL, 0);
+            buckets = buckets->next;
         }
     }
-    //same rules apply -> this last check is for the very final word in the file
-    //we have a seperate check because the while condition was broken, meaning we hit EOF
-    //we may have also read nothing, meaning the file is empty in which case we should let the user know
+    //we read EOF so the loop broke
     if (strlen(temp) > 0)
     {
         for (char *p = temp; *p; ++p)
             *p = tolower(*p);
-        keys = insertInput(keys, temp);
+        buckets = insertInput(buckets, temp);
     }
     //if there are no keys the file was empty
-    if (keys == NULL)
+    if (head->keys == NULL)
     {
         printf("The input file was empty, or there was an error reading from it\n");
         exit(EXIT_FAILURE);
     }
-    //free temp as we no longer need it
+    // free temp as we no longer need it
     free(temp);
     //close the file as we no longer need it
     close(input);
 }
 
 //helper function to store all of the keys from the file
-inputData *insertInput(inputData *keys, char *temp)
+bucket *insertInput(bucket *buckets, char *temp)
 {
-    //insert at the front to make it faster
     inputData *tempData = (inputData *)malloc(sizeof(inputData));
     tempData->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
     strcpy(tempData->word, temp);
     tempData->word[strlen(tempData->word)] = '\0';
-    tempData->next = keys;
+    tempData->next = buckets->keys;
     ++keysCount;
-    keys = tempData;
-    return keys;
+    buckets->keys = tempData;
+    return buckets;
+}
+
+//helper function to create our buckets
+void initializeBuckets()
+{
+    buckets = (bucket *)malloc(sizeof(bucket));
+    buckets->keys = NULL;
+    buckets->id = 0;
+    head = buckets;
+    int totalMapsOrExtra = maps ? maps : numThreads;
+    int i;
+    for (i = 1; i < totalMapsOrExtra; i++)
+    {
+        buckets->next = (bucket *)malloc(sizeof(bucket));
+        buckets = buckets->next;
+        buckets->id = i;
+        buckets->keys = NULL;
+    }
+    buckets->next = head;
+    buckets = head;
 }
 
 int main(int argc, char **argv)
@@ -225,16 +247,24 @@ int main(int argc, char **argv)
         printf("Please make sure to have 6 or 7 inputs\n 7: ./mapred –-app [-wordcount, -sort] –-impl [-procs, -threads] --maps -[num_maps] –-reduces -[num_reduces] --input [-infile] –-output [-outfile]\n  6: ./mapred –-app [-wordcount, -sort] –-impl [-extra] --numthreads -[num] --input [-infile] –-output [-outfile]\n");
         exit(EXIT_FAILURE);
     }
+    //create our buckets so we can use them to split up our file
+    initializeBuckets();
     //parse the input file and collect all of the data from it
     parseInputFile();
 
     //not important, this is just to see whether or not we read in data succesfully
-    while (keys != NULL)
+    int i;
+    for (i = 0; i < 4; i++)
     {
-        printf("%s\n", keys->word);
-        keys = keys->next;
+        while (head->keys != NULL)
+        {
+            printf("%s bucket: %d\n", head->keys->word, head->id);
+            head->keys = head->keys->next;
+        }
+        printf("done with all keys in bucket %d\n", head->id);
+        head = head->next;
     }
-    printf("%d\n", keysCount);
 
+    printf("%d\n", keysCount);
     return 0;
 }

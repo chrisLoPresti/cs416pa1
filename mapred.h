@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,10 +9,18 @@
  */
 struct inputData
 {
-    char * word;
+    char *word;
     struct inputData *next;
-    
-}typedef inputData;
 
-inputData * insertInput(inputData *, char*);
+} typedef inputData;
+
+struct bucket
+{
+    int id;
+    struct inputData *keys;
+    struct bucket *next;
+} typedef bucket;
+
+bucket *insertInput(bucket *, char *);
 void parseInputFile();
+void initializeBuckets();
