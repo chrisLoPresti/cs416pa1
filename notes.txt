@@ -1,0 +1,40 @@
+Notes from recitation on the assignment
+
+***split by: spaces, tabs, new lines
+
+***convert all words to lowercase 
+
+example:
+./mapred [-wordcount,-sort] [-procs, -threads] -4 -4 [-infile] [-outfile]
+
+input file: this is a sample sentence to illustrate a simple point to you.
+
+mission: read all of the words. mapper will split them up to different procs or threads
+
+Now we see that there are 12 words in the sentence, split them by space or return character etc.
+
+create key pairs as vectors:
+map 1 => (this, 1) (is, 1) (a,1) 
+map 2=> (simple, 1) (sentence, 1) (to, 1)
+map 3=> (illustrate, 1) (a, 1) (simple, 1)
+map 4=> (point, 1) (to, 1) (you, 1)
+
+before we go to the reducer, shuffle! (sort all the words)
+
+(a,1) (is, 1) (this, 1)
+(sentence, 1) (simple, 1) (to, 1)
+(a, 1) (illustrate, 1) (simple, 1)
+(point, 1) (to, 1) (you, 1)
+
+shuffle phase sorts =>
+
+(a,1) (a,1) (illustrate, 1) (is, 1) (point, 1) (sentence, 1) (simple, 1) (simple, 1) (this, 1) (to, 1) (to, 1) (you, 1)
+
+now reducer takes 3 words per and combines like terms=>
+
+(a,2) (illustrate, 1)
+(is, 1) (point, 1) (sentence, 1)
+(simple, 2) (this, 1)
+(to, 2) (you, 1)
+
+do one last final combine phase to combine anything across reducer outputes
