@@ -22,13 +22,13 @@ node * sort(node *head)
             if(strcmp(ptr->word,current->word) > 0)
             {
                 int count = current->count;
-                char * word = current->word;
+                char * tempWord = current->word;
 
                 current->count = ptr->count;
                 current->word = ptr->word;
 
                 ptr->count = count;
-                ptr->word = word;
+                ptr->word = tempWord;
             }
         }
     }
