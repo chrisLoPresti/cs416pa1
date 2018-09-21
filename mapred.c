@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 
     //not important, this is just to see whether or not we read in data succesfully
     int i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < maps; i++)
     {
         while (head->keys != NULL)
         {
