@@ -2,26 +2,48 @@
 
 bucket *buckets;
 bucket *head;
+node *combinedData;
+pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
 
 void initializeMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces)
 {
-
     buckets = newBuckets;
     head = newBuckets;
     mapsOrThreads = newMapsOrThreads;
     reduces = newReduces;
+    produceThreads();
+}
 
+void produceThreads()
+{
+    if (pthread_mutex_init(&dataLock, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        exit(EXIT_FAILURE);
+    }
+    pthread_t mapperThread;
     int i;
     for (i = 0; i < mapsOrThreads; i++)
     {
-        while (head->keys != NULL)
+        if (pthread_create(&mapperThread, NULL, map, (void *)head->keys) != 0)
         {
-            printf("%s bucket: %d\n", head->keys->word, head->id);
-            head->keys = head->keys->next;
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
         }
-        printf("done with all keys in bucket %d\n", head->id);
         head = head->next;
     }
+    pthread_join(mapperThread, NULL);
+}
+
+void *map(void *keys)
+{
+    inputData *newKeys = keys;
+    while (newKeys != NULL)
+    {
+        printf("%s\n", newKeys->word);
+        newKeys = newKeys->next;
+    }
+    return NULL;
 }

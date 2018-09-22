@@ -16,8 +16,6 @@ static int output;
 //buckets to split our input keys
 static bucket *buckets;
 static bucket *head;
-//count of the total number of inputs (words or numbers)
-static int keysCount;
 
 //helper function to parse the input file
 void parseInputFile()
@@ -76,7 +74,6 @@ bucket *insertInput(bucket *buckets, char *temp)
     strcpy(tempData->word, temp);
     tempData->word[strlen(tempData->word)] = '\0';
     tempData->next = buckets->keys;
-    ++keysCount;
     buckets->keys = tempData;
     return buckets;
 }
@@ -192,10 +189,8 @@ int main(int argc, char **argv)
     initializeBuckets();
     //parse the input file and collect all of the data from it
     parseInputFile();
-    int totalMapsOrExtra = maps ? maps - 1 : numThreads;
+    int totalMapsOrExtra = maps ? maps : numThreads;
 
     initializeMemory(head, totalMapsOrExtra, reduces);
-
-    printf("%d\n", keysCount);
     return 0;
 }

@@ -11,6 +11,14 @@
 #include <ctype.h>
 #include <fcntl.h>
 
+struct node
+{
+    char *word;
+    int count;
+    struct node *next;
+
+} typedef node;
+
 struct inputData
 {
     char *word;
@@ -26,5 +34,7 @@ struct bucket
 } typedef bucket;
 
 void initializeMemory(bucket *, int, int);
+void produceThreads();
+void *map(void *);
 
 #endif
