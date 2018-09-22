@@ -30,13 +30,14 @@ void produceThreads()
     int i;
     for (i = 0; i < mapsOrThreads; i++)
     {
-        if (pthread_create(&mapperThread[i], NULL, map, (void *)head->keys) != 0)
+        if (head->keys && pthread_create(&mapperThread[i], NULL, map, (void *)head->keys) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
         }
         head = head->next;
     }
+
     for (int i = 0; i < mapsOrThreads; i++)
     {
         pthread_join(mapperThread[i], NULL);
@@ -80,5 +81,6 @@ void *map(void *keys)
         newKeys = newKeys->next;
         pthread_mutex_unlock(&dataLock);
     }
+
     return NULL;
 }
