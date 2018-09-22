@@ -40,9 +40,16 @@ void produceThreads()
 void *map(void *keys)
 {
     inputData *newKeys = keys;
+    node *keyPairs = (node *)malloc(sizeof(node));
+    node *keyPairsHead = keyPairs;
     while (newKeys != NULL)
     {
-        printf("%s\n", newKeys->word);
+        keyPairs->word = (char *)malloc(sizeof(char) * strlen(newKeys->word) + 1);
+        strcpy(keyPairs->word, newKeys->word);
+        keyPairs->word[strlen(keyPairs->word)] = '\0';
+        keyPairs->count = 1;
+        keyPairs->next = newKeys->next ? (node *)malloc(sizeof(node)) : NULL;
+        keyPairs = keyPairs->next;
         newKeys = newKeys->next;
     }
     return NULL;
