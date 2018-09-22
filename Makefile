@@ -13,5 +13,7 @@ mapred: threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -c threads.c
 	$(CC) $(CFLAGS) -c sort.c
 	$(CC) $(CFLAGS) -o mapred mapred.c threads.o sort.o
+	rm -f threads.o sort.o 
+	rm -r mapred.dSYM
 clean:
 	rm -f threads.o sort.o mapred
