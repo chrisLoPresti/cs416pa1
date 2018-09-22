@@ -1,13 +1,3 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "mapred.h"
 //holds the values -wordcount or -sort
 static char *application;
@@ -23,8 +13,6 @@ static int maps;
 static int input;
 //our output file
 static int output;
-//a linked list of all the input data
-static inputData *keys;
 //buckets to split our input keys
 static bucket *buckets;
 static bucket *head;
@@ -34,12 +22,9 @@ static int keysCount;
 //helper function to parse the input file
 void parseInputFile()
 {
-    //determine which number to use
-    int totalMapsOrExtra = maps ? maps - 1 : numThreads - 1;
     //temp is going to be our string that continues to be built from valid characters
     char *temp = (char *)malloc(sizeof(char) * 2); //singleChar is what we will recieve from the input file
     char singleChar;
-    int max = 0;
     //while we are able to read a character ...
     while (read(input, &singleChar, 1) != 0)
     {
@@ -207,19 +192,9 @@ int main(int argc, char **argv)
     initializeBuckets();
     //parse the input file and collect all of the data from it
     parseInputFile();
+    int totalMapsOrExtra = maps ? maps - 1 : numThreads;
 
-    //not important, this is just to see whether or not we read in data succesfully
-    int i;
-    for (i = 0; i < maps; i++)
-    {
-        while (head->keys != NULL)
-        {
-            printf("%s bucket: %d\n", head->keys->word, head->id);
-            head->keys = head->keys->next;
-        }
-        printf("done with all keys in bucket %d\n", head->id);
-        head = head->next;
-    }
+    initializeMemory(head, totalMapsOrExtra, reduces);
 
     printf("%d\n", keysCount);
     return 0;

@@ -1,8 +1,13 @@
-all: mapred 
+CC = gcc
+CFLAGS = -g -Wall
 
-eighth: mapred .c
+all: mapred
 
-	gcc -Wall -Werror -fsanitize=address mapred .c -o mapred 
+mymalloc: threads.c
+	$(CC) $(CFLAGS) -o mm threads.c
 
+mapred: threads.c mapred.c
+	$(CC) $(CFLAGS) -c threads.c
+	$(CC) $(CFLAGS) -o mapred mapred.c threads.o
 clean:
-	rm -rf mapred 
+	rm -f threads.o mapred
