@@ -153,18 +153,18 @@ int main(int argc, char **argv)
         //lets get the number of maps
         maps = atoi(++argv[3]);
         //make sure it is a valid number
-        if (maps == 0)
+        if (maps <= 0)
         {
-            printf("You entered an invalid --maps value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --maps value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
 
         //lets get the number of reduces
         reduces = atoi(++argv[4]);
         //make sure it is a valid number
-        if (reduces == 0)
+        if (reduces <= 0)
         {
-            printf("You entered an invalid --numThreads value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --numReduces value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -173,9 +173,9 @@ int main(int argc, char **argv)
         // lets get the number of threads
         numThreads = atoi(++argv[3]);
         //make sure it is a valid number
-        if (numThreads == 0)
+        if (numThreads <= 0)
         {
-            printf("You entered an invalid --num_threads value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --num_threads value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
     }
