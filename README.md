@@ -39,21 +39,74 @@ The code should run!
 
 ## Contracts --important
 
-Splitter creates buckets, and each bucket has a list of keys.
+The mapreduc function will create buckets based off of the number of maps
+(or threads we need to make if using extra credit)
 
-The splitter will give the list of keys:
+The mapred.c file will produce buckets:
+<br/>
+<br/>
+
+```c
+struct bucket
+{
+    int id;
+    struct inputData *keys;
+    struct bucket *next;
+} typedef bucket;
+```
+
+<br/>
+<br/>
+Which will be populated with inputData from the file:
+
 <br/>
 <br/>
 
 ```c
 struct inputData
 {
-char *word;
-struct inputData *next;
+    char *word;
+    struct inputData *next;
 
 } typedef inputData;
 ```
 
 <br/>
 <br/>
-from there the map will recieve ...TBD
+
+From here if we are implementing threads,
+the mapred.c file will give the whole list of buckets to the threads.c file.
+<br/>
+
+The threads.c file will create threads and hand each thread a list of inputData
+from each bucket.
+<br/>
+The threads will be mapping input data with a count creating:
+<br/>
+
+```c
+struct node
+{
+    char *word;
+    int count;
+    struct node *next;
+
+} typedef node;
+```
+
+<br/>
+
+The output from each thread will be combined together.
+Once we are done combinding information, we will sort if using the sort.c file.
+Sort.c takes in a list of combinedData
+<br/>
+
+```c
+struct node
+{
+    char *word;
+    int count;
+    struct node *next;
+
+} typedef node;
+```
