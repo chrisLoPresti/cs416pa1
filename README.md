@@ -8,12 +8,17 @@ Then go to github and create a new branch to work in.
 <br/>
 Once you have the branch, go to your terminal and type:
 <br/>
+<br/>
 git fetch --all
+<br/>
 <br/>
 This will pull in all newly created branches to your local repo.
 <br/>
-Now type: <br/>
+Now type:
+<br/>
+<br/>
 git checkout [repo name]
+<br/>
 <br/>
 This will place you in that branch so you can start working.
 
