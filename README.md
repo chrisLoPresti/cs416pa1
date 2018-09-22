@@ -23,16 +23,19 @@ First type "make" or "Make" to complie the code using the Makefile that is provi
 <br/>
 Then type:
 <br/>
+<br/>
 ./mapred [-wordcount,-sort][-procs, -threads] -[num_maps] -[num_reduces][-infile][-outfile]
 <br/>
+<br/>
 Or if using the extra credit:
+<br/>
 <br/>
 ./mapred [-wordcount,-sort][-extra] -[num_threads][-infile][-outfile]
 <br/>
 <br/>
 Here is a working example with the provided code:
 <br/>
-./mapred -wordcount -procs -4 -4 -sort.csv -results.txt
+./mapred -wordcount -threads -4 -4 -input.txt -results.txt
 <br/>
 <br/>
 The code should run!
