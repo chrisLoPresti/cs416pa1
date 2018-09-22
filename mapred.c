@@ -191,6 +191,6 @@ int main(int argc, char **argv)
     parseInputFile();
     int totalMapsOrExtra = maps ? maps : numThreads;
 
-    initializeMemory(head, totalMapsOrExtra, reduces);
+    initializeMemory(head, totalMapsOrExtra, reduces, output);
     return 0;
 }

@@ -1,6 +1,7 @@
 #ifndef mapred_h
 #define mapred_h
 
+#include "structs.h"
 #include "threads.h"
 #include <stdio.h>
 #include <unistd.h>

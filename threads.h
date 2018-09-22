@@ -1,6 +1,8 @@
 #ifndef threads_h
 #define threads_h
 
+#include "sort.h"
+#include "structs.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -11,29 +13,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 
-struct node
-{
-    char *word;
-    int count;
-    struct node *next;
-
-} typedef node;
-
-struct inputData
-{
-    char *word;
-    struct inputData *next;
-
-} typedef inputData;
-
-struct bucket
-{
-    int id;
-    struct inputData *keys;
-    struct bucket *next;
-} typedef bucket;
-
-void initializeMemory(bucket *, int, int);
+void initializeMemory(bucket *, int, int, int);
 void produceThreads();
 void *map(void *);
 

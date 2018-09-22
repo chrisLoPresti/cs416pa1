@@ -3,11 +3,15 @@ CFLAGS = -g -Wall
 
 all: mapred
 
-mymalloc: threads.c
+threads: threads.c
 	$(CC) $(CFLAGS) -o mm threads.c
 
-mapred: threads.c mapred.c
+sort: sort.c
+	$(CC) $(CFLAGS) -o mm sort.c
+
+mapred: threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -c threads.c
-	$(CC) $(CFLAGS) -o mapred mapred.c threads.o
+	$(CC) $(CFLAGS) -c sort.c
+	$(CC) $(CFLAGS) -o mapred mapred.c threads.o sort.o
 clean:
-	rm -f threads.o mapred
+	rm -f threads.o sort.o mapred

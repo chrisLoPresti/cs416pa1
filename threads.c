@@ -6,14 +6,16 @@ node *combinedData;
 pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
+int outputFile;
 
-void initializeMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces)
+void initializeMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces, int output)
 {
     buckets = newBuckets;
     head = newBuckets;
     mapsOrThreads = newMapsOrThreads;
     reduces = newReduces;
     combinedData = NULL;
+    outputFile = output;
     produceThreads();
 }
 
@@ -39,6 +41,8 @@ void produceThreads()
     {
         pthread_join(mapperThread[i], NULL);
     }
+
+    combinedData = sort(combinedData);
 
     //not needed - just to print key pairs
     while (combinedData != NULL)
