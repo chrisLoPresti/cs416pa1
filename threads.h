@@ -13,7 +13,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 
-void initializeMemory(bucket *, int, int, int);
+void initializeThreadMemory(bucket *, int, int, int);
 void produceThreads();
 void *map(void *);
 

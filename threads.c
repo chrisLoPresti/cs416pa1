@@ -8,7 +8,7 @@ int mapsOrThreads;
 int reduces;
 int outputFile;
 
-void initializeMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces, int output)
+void initializeThreadMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces, int output)
 {
     buckets = newBuckets;
     head = newBuckets;
