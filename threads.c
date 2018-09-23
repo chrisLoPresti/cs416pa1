@@ -85,6 +85,7 @@ void writeToFile()
     while (combinedDataHead != NULL)
     {
         char *temp;
+        char *message;
         int length = 0;
         if (strcmp(app, "-wordcount") == 0)
         {
@@ -99,11 +100,25 @@ void writeToFile()
             {
                 temp[strlen(temp)] = '\n';
             }
+            message = (char *)malloc(sizeof(char) * length + 3 + strlen(combinedDataHead->word));
+            strcat(message, combinedDataHead->word);
+            strcat(message, " ");
+            strcat(message, temp);
         }
-        char *message = (char *)malloc(sizeof(char) * length + 3 + strlen(combinedDataHead->word));
-        strcat(message, combinedDataHead->word);
-        strcat(message, " ");
-        strcat(message, temp);
+        else
+        {
+            if (combinedDataHead->next == NULL)
+            {
+                combinedDataHead->word[strlen(combinedDataHead->word)] = '\0';
+            }
+            else
+            {
+                combinedDataHead->word[strlen(combinedDataHead->word)] = '\n';
+            }
+            message = (char *)malloc(sizeof(char) * 1 + strlen(combinedDataHead->word));
+            strcat(message, combinedDataHead->word);
+        }
+
         if (write(outputFile, message, strlen(message)) < 0)
         {
             printf("Error writing to the file\n");
