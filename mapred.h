@@ -1,30 +1,21 @@
+#ifndef mapred_h
+#define mapred_h
 
+#include "structs.h"
+#include "threads.h"
 #include <stdio.h>
-#include<stdlib.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
+#include <fcntl.h>
 /*
  * This struct will hold all of our input
  */
-struct inputData
-{
-    char * word;
-    struct inputData *next;
-    
-}typedef inputData;
 
-struct node
-{
-    char * word;
-    int count;
-    struct node *next;
-    
-}typedef node;
-
-inputData * insertInput(inputData *, char*);
+node *insertInput(node *, char *);
 void parseInputFile();
-
-// functions used for sorting
-node *sort(node *);
-void testSort();
+void initializeBuckets();
+#endif

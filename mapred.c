@@ -1,141 +1,78 @@
-/* 
-Notes from recitation on the assignment
-
-***split by: spaces, tabs, new lines
-
-***convert all words to lowercase 
-
-example:
-./mapred [-wordcount,-sort] [-procs, -threads] -4 -4 [-infile] [-outfile]
-
-input file: this is a sample sentence to illustrate a simple point to you.
-
-mission: read all of the words. mapper will split them up to different procs or threads
-
-Now we see that there are 12 words in the sentence, split them by space or return character etc.
-
-create key pairs as vectors:
-map 1 => (this, 1) (is, 1) (a,1) 
-map 2=> (simple, 1) (sentence, 1) (to, 1)
-map 3=> (illustrate, 1) (a, 1) (simple, 1)
-map 4=> (point, 1) (to, 1) (you, 1)
-
-before we go to the reducer, shuffle! (sort all the words)
-
-(a,1) (is, 1) (this, 1)
-(sentence, 1) (simple, 1) (to, 1)
-(a, 1) (illustrate, 1) (simple, 1)
-(point, 1) (to, 1) (you, 1)
-
-shuffle phase sorts =>
-
-(a,1) (a,1) (illustrate, 1) (is, 1) (point, 1) (sentence, 1) (simple, 1) (simple, 1) (this, 1) (to, 1) (to, 1) (you, 1)
-
-now reducer takes 3 words per and combines like terms=>
-
-(a,2) (illustrate, 1)
-(is, 1) (point, 1) (sentence, 1)
-(simple, 2) (this, 1)
-(to, 2) (you, 1)
-
-do one last final combine phase to combine anything across reducer outputes
-*/
-
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "mapred.h"
-//holds the values -wordcount or -sort
 static char *application;
-//holds the values -procs,-threads or -extra
 static char *implementation;
-//if we chose -extra, get the humber of threads
 static int numThreads;
-//else get the number of reduces
 static int reduces;
-//and the number of maps
 static int maps;
-//our input file
 static int input;
-//our output file
 static int output;
-//a linked list of all the input data
-static inputData *keys;
-//count of the total number of inputs (words or numbers)
-static int keysCount;
+node **buckets;
+int totalMapsOrExtra;
 
-//helper function to parse the input file
 void parseInputFile()
 {
-    //temp is going to be our string that continues to be built from valid characters
     char *temp = (char *)malloc(sizeof(char) * 2);
-    //singleChar is what we will recieve from the input file
     char singleChar;
-    //while we are able to read a character ...
+    int itterator = 0;
     while (read(input, &singleChar, 1) != 0)
     {
-        //check to make sure the character is valid, if not its considered a key seperator
-        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != 0)
+        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != '\r' && singleChar != 0)
         {
-            //resize the string to hold one more character and append the singleChar to it
-            temp = realloc(temp, strlen(temp) + 2);
+            temp = realloc(temp, strlen(temp) + 1);
             temp[strlen(temp)] = singleChar;
             temp[strlen(temp) + 1] = '\0';
             continue;
         }
-        //make a call to save the input key into memory IFF the key is a non-empyt string
-        //for example, if singleChar = ' ' it is not valid, and temp will not have been built
-        //temp is not NULL because it points to valid memory, but it holds no characters, so check its length
         if (strlen(temp) > 0)
         {
-            //we verified that the string is a valid key, so convert it to lowercase and insert it to memory
             for (char *p = temp; *p; ++p)
                 *p = tolower(*p);
-            keys = insertInput(keys, temp);
-            //reset temp so we can build a fresh word
-            temp = realloc(temp, 0);
+            buckets[itterator] = insertInput(buckets[itterator], temp);
+            temp = realloc(NULL, 0);
+            ++itterator;
+            if (itterator == totalMapsOrExtra)
+            {
+                itterator = 0;
+            }
         }
     }
-    //same rules apply -> this last check is for the very final word in the file
-    //we have a seperate check because the while condition was broken, meaning we hit EOF
-    //we may have also read nothing, meaning the file is empty in which case we should let the user know
     if (strlen(temp) > 0)
     {
         for (char *p = temp; *p; ++p)
             *p = tolower(*p);
-        keys = insertInput(keys, temp);
+        buckets[itterator] = insertInput(buckets[itterator], temp);
     }
-    //if there are no keys the file was empty
-    if (keys == NULL)
+    if (buckets[0]->word == NULL)
     {
         printf("The input file was empty, or there was an error reading from it\n");
         exit(EXIT_FAILURE);
     }
-    //free temp as we no longer need it
     free(temp);
-    //close the file as we no longer need it
     close(input);
 }
 
-//helper function to store all of the keys from the file
-inputData *insertInput(inputData *keys, char *temp)
+node *insertInput(node *pointer, char *temp)
 {
-    //insert at the front to make it faster
-    inputData *tempData = (inputData *)malloc(sizeof(inputData));
+    node *tempData = (node *)malloc(sizeof(node));
     tempData->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
     strcpy(tempData->word, temp);
     tempData->word[strlen(tempData->word)] = '\0';
-    tempData->next = keys;
-    ++keysCount;
-    keys = tempData;
-    return keys;
+    tempData->next = pointer;
+    pointer = tempData;
+    return pointer;
+}
+
+void initializeBuckets()
+{
+    totalMapsOrExtra = maps ? maps : numThreads;
+
+    buckets = (node **)malloc(sizeof(node *) * totalMapsOrExtra);
+    int i;
+    for (i = 0; i < totalMapsOrExtra; ++i)
+    {
+        buckets[i] = malloc(sizeof(node));
+        buckets[i] = NULL;
+    }
 }
 
 int main(int argc, char **argv)
@@ -193,18 +130,18 @@ int main(int argc, char **argv)
         //lets get the number of maps
         maps = atoi(++argv[3]);
         //make sure it is a valid number
-        if (maps == 0)
+        if (maps <= 0)
         {
-            printf("You entered an invalid --maps value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --maps value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
 
         //lets get the number of reduces
         reduces = atoi(++argv[4]);
         //make sure it is a valid number
-        if (reduces == 0)
+        if (reduces <= 0)
         {
-            printf("You entered an invalid --numThreads value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --numReduces value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -213,9 +150,9 @@ int main(int argc, char **argv)
         // lets get the number of threads
         numThreads = atoi(++argv[3]);
         //make sure it is a valid number
-        if (numThreads == 0)
+        if (numThreads <= 0)
         {
-            printf("You entered an invalid --num_threads value of 0 or some form of characters.\n Please use the form -[num]\n");
+            printf("You entered an invalid --num_threads value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -225,16 +162,37 @@ int main(int argc, char **argv)
         printf("Please make sure to have 6 or 7 inputs\n 7: ./mapred –-app [-wordcount, -sort] –-impl [-procs, -threads] --maps -[num_maps] –-reduces -[num_reduces] --input [-infile] –-output [-outfile]\n  6: ./mapred –-app [-wordcount, -sort] –-impl [-extra] --numthreads -[num] --input [-infile] –-output [-outfile]\n");
         exit(EXIT_FAILURE);
     }
-    //parse the input file and collect all of the data from it
+
+    initializeBuckets();
     parseInputFile();
-
-    //not important, this is just to see whether or not we read in data succesfully
-    while (keys != NULL)
+    if (strcmp(implementation, "-threads") == 0)
     {
-        printf("%s\n", keys->word);
-        keys = keys->next;
-    }
-    printf("%d\n", keysCount);
+        initializeThreadMemory(buckets, totalMapsOrExtra, reduces, output, application);
+        int i;
+        for (i = 0; i < totalMapsOrExtra; i++)
+        {
+            while (buckets[i] != NULL)
+            {
 
+                node *ptr = buckets[i];
+                ptr = ptr->next;
+                free(buckets[i]);
+                buckets[i] = NULL;
+            }
+        }
+        free(buckets);
+    }
     return 0;
 }
+/* 
+this is code you can use to test to see if the buckets have information
+int i = 0;
+for (i = 0; i < totalMapsOrExtra - 1; i++)
+{
+    while (head[i] != NULL)
+    {
+        printf("(%s,%d)\n", head[i]->word, head[i]->count);
+        head[i] = head[i]->next;
+    }
+}
+*/
