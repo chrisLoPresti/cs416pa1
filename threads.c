@@ -1,25 +1,29 @@
 #include "threads.h"
 
-bucket *buckets;
-bucket *head;
+node **buckets;
 node *combinedData;
+node *combinedDataHead;
 pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
 int outputFile;
+int totalKeys;
+char *app;
 
-void initializeThreadMemory(bucket *newBuckets, int newMapsOrThreads, int newReduces, int output)
+void initializeThreadMemory(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
     buckets = newBuckets;
-    head = newBuckets;
     mapsOrThreads = newMapsOrThreads;
     reduces = newReduces;
     combinedData = NULL;
     outputFile = output;
-    produceThreads();
+    app = malloc(strlen(application) + 1);
+    strcpy(app, application);
+    app[strlen(app)] = '\0';
+    produceThreadMaps();
 }
 
-void produceThreads()
+void produceThreadMaps()
 {
     if (pthread_mutex_init(&dataLock, NULL) != 0)
     {
@@ -30,57 +34,91 @@ void produceThreads()
     int i;
     for (i = 0; i < mapsOrThreads; i++)
     {
-        if (head->keys && pthread_create(&mapperThread[i], NULL, map, (void *)head->keys) != 0)
+        if (buckets[i] && pthread_create(&mapperThread[i], NULL, map, (void *)buckets[i]) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
         }
-        head = head->next;
     }
 
-    for (int i = 0; i < mapsOrThreads; i++)
+    for (i = 0; i < mapsOrThreads; i++)
     {
         pthread_join(mapperThread[i], NULL);
     }
 
     combinedData = sort(combinedData);
-
-    //not needed - just to print key pairs
-    while (combinedData != NULL)
-    {
-        printf("(%s,%d)\n", combinedData->word, combinedData->count);
-        combinedData = combinedData->next;
-    }
+    combinedDataHead = combinedData;
+    writeToFile();
 }
 
 void *map(void *keys)
 {
-    inputData *newKeys = keys;
-    while (newKeys != NULL)
+    node *bucketData = (node *)keys;
+    node *startptr = bucketData;
+    node *lastptr;
+    while (bucketData != NULL)
     {
-        pthread_mutex_lock(&dataLock);
-        if (combinedData == NULL)
-        {
-            combinedData = (node *)malloc(sizeof(node));
-            combinedData->word = (char *)malloc(sizeof(char) * strlen(newKeys->word) + 1);
-            strcpy(combinedData->word, newKeys->word);
-            combinedData->word[strlen(combinedData->word)] = '\0';
-            combinedData->count = 1;
-            combinedData->next = NULL;
-        }
-        else
-        {
-            node *temp = (node *)malloc(sizeof(node));
-            temp->word = (char *)malloc(sizeof(char) * strlen(newKeys->word) + 1);
-            strcpy(temp->word, newKeys->word);
-            temp->word[strlen(temp->word)] = '\0';
-            temp->count = 1;
-            temp->next = combinedData;
-            combinedData = temp;
-        }
-        newKeys = newKeys->next;
-        pthread_mutex_unlock(&dataLock);
+        bucketData->count = 1;
+        lastptr = bucketData;
+        bucketData = bucketData->next;
     }
+
+    pthread_mutex_lock(&dataLock);
+
+    if (!combinedData)
+    {
+        combinedData = (node *)malloc(sizeof(node));
+        combinedData = startptr;
+    }
+    else
+    {
+        lastptr->next = combinedData;
+        combinedData = startptr;
+    }
+    pthread_mutex_unlock(&dataLock);
 
     return NULL;
 }
+
+void writeToFile()
+{
+    while (combinedDataHead != NULL)
+    {
+        char *temp;
+        int length = 0;
+        if (strcmp(app, "-wordcount") == 0)
+        {
+            length = floor(log10(abs(combinedDataHead->count))) + 1;
+            temp = (char *)malloc(sizeof(char) + length + 1);
+            sprintf(temp, "%d", combinedDataHead->count);
+            if (combinedDataHead->next == NULL)
+            {
+                temp[strlen(temp)] = '\0';
+            }
+            else
+            {
+                temp[strlen(temp)] = '\n';
+            }
+        }
+        char *message = (char *)malloc(sizeof(char) * length + 3 + strlen(combinedDataHead->word));
+        strcat(message, combinedDataHead->word);
+        strcat(message, " ");
+        strcat(message, temp);
+        if (write(outputFile, message, strlen(message)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        combinedDataHead = combinedDataHead->next;
+    }
+}
+
+// //just used t o print out the output
+// for (i = 0; i < mapsOrThreads - 1; i++)
+// {
+//     while (combinedDataHead != NULL)
+//     {
+//         printf("(%s,%d)\n", combinedDataHead->word, combinedDataHead->count);
+//         combinedDataHead = combinedDataHead->next;
+//     }
+// }
