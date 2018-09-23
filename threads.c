@@ -1,8 +1,8 @@
 #include "threads.h"
 
 node **buckets;
-node *combinedData;
-node *combinedDataHead;
+node *dataLinkList;
+node *dataLinkListHead;
 pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
@@ -10,26 +10,41 @@ int outputFile;
 int totalKeys;
 char *app;
 
-void initializeThreadMemory(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
+void main_threading(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
+    // initialize all information 
     buckets = newBuckets;
     mapsOrThreads = newMapsOrThreads;
-    reduces = newReduces;
-    combinedData = NULL;
+    reduces = newReduces; 
     outputFile = output;
     app = malloc(strlen(application) + 1);
     strcpy(app, application);
-    app[strlen(app)] = '\0';
+
+    // setup mutex lock
+    initializeDataLinkListMutexLock();
+ 
+    // create threads and run mapping function
     produceThreadMaps();
+
+    // sort data
+    dataLinkList = sort(dataLinkList);
+
+    dataLinkListHead = dataLinkList;
+    writeToFile();
+    
 }
 
-void produceThreadMaps()
+void initializeDataLinkListLock()
 {
     if (pthread_mutex_init(&dataLock, NULL) != 0)
     {
         printf("\n mutex init failed\n");
         exit(EXIT_FAILURE);
     }
+}
+
+void produceThreadMaps()
+{
     pthread_t mapperThread[mapsOrThreads];
     int i;
     for (i = 0; i < mapsOrThreads; i++)
@@ -45,10 +60,6 @@ void produceThreadMaps()
     {
         pthread_join(mapperThread[i], NULL);
     }
-
-    combinedData = sort(combinedData);
-    combinedDataHead = combinedData;
-    writeToFile();
 }
 
 void *map(void *keys)
@@ -65,15 +76,15 @@ void *map(void *keys)
 
     pthread_mutex_lock(&dataLock);
 
-    if (!combinedData)
+    if (!dataLinkList)
     {
-        combinedData = (node *)malloc(sizeof(node));
-        combinedData = startptr;
+        dataLinkList = (node *)malloc(sizeof(node));
+        dataLinkList = startptr;
     }
     else
     {
-        lastptr->next = combinedData;
-        combinedData = startptr;
+        lastptr->next = dataLinkList;
+        dataLinkList = startptr;
     }
     pthread_mutex_unlock(&dataLock);
 
@@ -82,17 +93,17 @@ void *map(void *keys)
 
 void writeToFile()
 {
-    while (combinedDataHead != NULL)
+    while (dataLinkListHead != NULL)
     {
         char *temp;
         char *message;
         int length = 0;
         if (strcmp(app, "-wordcount") == 0)
         {
-            length = floor(log10(abs(combinedDataHead->count))) + 1;
+            length = floor(log10(abs(dataLinkListHead->count))) + 1;
             temp = (char *)malloc(sizeof(char) + length + 1);
-            sprintf(temp, "%d", combinedDataHead->count);
-            if (combinedDataHead->next == NULL)
+            sprintf(temp, "%d", dataLinkListHead->count);
+            if (dataLinkListHead->next == NULL)
             {
                 temp[strlen(temp)] = '\0';
             }
@@ -100,23 +111,23 @@ void writeToFile()
             {
                 temp[strlen(temp)] = '\n';
             }
-            message = (char *)malloc(sizeof(char) * length + 3 + strlen(combinedDataHead->word));
-            strcat(message, combinedDataHead->word);
+            message = (char *)malloc(sizeof(char) * length + 3 + strlen(dataLinkListHead->word));
+            strcat(message, dataLinkListHead->word);
             strcat(message, " ");
             strcat(message, temp);
         }
         else
         {
-            if (combinedDataHead->next == NULL)
+            if (dataLinkListHead->next == NULL)
             {
-                combinedDataHead->word[strlen(combinedDataHead->word)] = '\0';
+                dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\0';
             }
             else
             {
-                combinedDataHead->word[strlen(combinedDataHead->word)] = '\n';
+                dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\n';
             }
-            message = (char *)malloc(sizeof(char) * 1 + strlen(combinedDataHead->word));
-            strcat(message, combinedDataHead->word);
+            message = (char *)malloc(sizeof(char) * 1 + strlen(dataLinkListHead->word));
+            strcat(message, dataLinkListHead->word);
         }
 
         if (write(outputFile, message, strlen(message)) < 0)
@@ -124,16 +135,16 @@ void writeToFile()
             printf("Error writing to the file\n");
             exit(EXIT_FAILURE);
         }
-        combinedDataHead = combinedDataHead->next;
+        dataLinkListHead = dataLinkListHead->next;
     }
 }
 
 // //just used t o print out the output
 // for (i = 0; i < mapsOrThreads - 1; i++)
 // {
-//     while (combinedDataHead != NULL)
+//     while (dataLinkListHead != NULL)
 //     {
-//         printf("(%s,%d)\n", combinedDataHead->word, combinedDataHead->count);
-//         combinedDataHead = combinedDataHead->next;
+//         printf("(%s,%d)\n", dataLinkListHead->word, dataLinkListHead->count);
+//         dataLinkListHead = dataLinkListHead->next;
 //     }
 // }
