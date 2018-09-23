@@ -14,8 +14,10 @@
 #include <fcntl.h>
 #include <math.h>
 
-void initializeThreadMemory(node **, int, int, int, char *);
-void produceThreadMaps();
+
+void threading_driver(node **, int, int, int, char *);
+void initializeDataLinkListMutexLock();
+void produceThreadMapsAndWaitTillAllThreadsFinish();
 void *map(void *);
 void writeToFile();
 

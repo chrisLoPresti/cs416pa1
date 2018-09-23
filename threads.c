@@ -10,7 +10,7 @@ int outputFile;
 int totalKeys;
 char *app;
 
-void main_threading(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
+void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
     // initialize all information 
     buckets = newBuckets;
@@ -24,7 +24,7 @@ void main_threading(node **newBuckets, int newMapsOrThreads, int newReduces, int
     initializeDataLinkListMutexLock();
  
     // create threads and run mapping function
-    produceThreadMaps();
+    produceThreadMapsAndWaitTillAllThreadsFinish();
 
     // sort data
     dataLinkList = sort(dataLinkList);
@@ -34,7 +34,7 @@ void main_threading(node **newBuckets, int newMapsOrThreads, int newReduces, int
     
 }
 
-void initializeDataLinkListLock()
+void initializeDataLinkListMutexLock()
 {
     if (pthread_mutex_init(&dataLock, NULL) != 0)
     {
@@ -43,7 +43,7 @@ void initializeDataLinkListLock()
     }
 }
 
-void produceThreadMaps()
+void produceThreadMapsAndWaitTillAllThreadsFinish()
 {
     pthread_t mapperThread[mapsOrThreads];
     int i;
@@ -78,7 +78,6 @@ void *map(void *keys)
 
     if (!dataLinkList)
     {
-        dataLinkList = (node *)malloc(sizeof(node));
         dataLinkList = startptr;
     }
     else

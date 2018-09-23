@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     parseInputFile();
     if (strcmp(implementation, "-threads") == 0)
     {
-        initializeThreadMemory(buckets, totalMapsOrExtra, reduces, output, application);
+        threading_driver(buckets, totalMapsOrExtra, reduces, output, application);
         int i;
         for (i = 0; i < totalMapsOrExtra; i++)
         {
