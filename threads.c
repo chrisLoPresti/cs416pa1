@@ -107,11 +107,16 @@ void writeToFile()
         {
             if (combinedDataHead->next != NULL)
             {
-                message = (char *)calloc(strlen(combinedDataHead->word) + 1, 1);
+                message = (char *)calloc(strlen(combinedDataHead->word) + 2, 1);
                 strcat(message, combinedDataHead->word);
                 int length = strlen(message);
                 message[length] = '\n';
-                message[length] = '\0';
+                message[length + 1] = '\0';
+            }
+            else
+            {
+                message = (char *)calloc(strlen(combinedDataHead->word) + 1, 1);
+                strcat(message, combinedDataHead->word);
             }
         }
 
