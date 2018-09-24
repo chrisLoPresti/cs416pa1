@@ -17,5 +17,6 @@ mapred: threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -o mapred mapred.c threads.o sort.o $(THREADSLIB) $(MATHLIB)
 
 clean:
-	rm -f threads.o sort.o mapred.o mapred 
+	rm -f threads.o sort.o mapred.o
+	rm -f mapred 
 	rm -r mapred.dSYM
