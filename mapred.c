@@ -25,7 +25,8 @@ void parseInputFile()
         }
         if (strlen(temp) > 0)
         {
-            for (char *p = temp; *p; ++p)
+            char *p;
+            for (p = temp; *p; ++p)
                 *p = tolower(*p);
             buckets[itterator] = insertInput(buckets[itterator], temp);
             free(temp);
@@ -39,7 +40,8 @@ void parseInputFile()
     }
     if (strlen(temp) > 0)
     {
-        for (char *p = temp; *p; ++p)
+        char *p;
+        for (p = temp; *p; ++p)
             *p = tolower(*p);
         buckets[itterator] = insertInput(buckets[itterator], temp);
     }
