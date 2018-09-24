@@ -46,7 +46,7 @@ void produceThreadMaps()
         pthread_join(mapperThread[i], NULL);
     }
 
-    combinedData = sort(combinedData);
+    combinedData = sort(combinedData, app);
     combinedDataHead = combinedData;
     writeToFile();
 }
