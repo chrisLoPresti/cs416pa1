@@ -90,33 +90,29 @@ void writeToFile()
         if (strcmp(app, "-wordcount") == 0)
         {
             length = floor(log10(abs(combinedDataHead->count))) + 1;
-            temp = (char *)malloc(sizeof(char) + length + 1);
+            temp = (char *)malloc(sizeof(char) + length + 2);
             sprintf(temp, "%d", combinedDataHead->count);
-            if (combinedDataHead->next == NULL)
+            if (combinedDataHead->next != NULL)
             {
-                temp[strlen(temp)] = '\0';
-            }
-            else
-            {
+                temp[strlen(temp) + 1] = '\0';
                 temp[strlen(temp)] = '\n';
             }
-            message = (char *)malloc(sizeof(char) * length + 3 + strlen(combinedDataHead->word));
+            message = (char *)calloc(strlen(temp) + strlen(combinedDataHead->word) + 2, 1);
+
             strcat(message, combinedDataHead->word);
             strcat(message, " ");
             strcat(message, temp);
         }
         else
         {
-            if (combinedDataHead->next == NULL)
+            if (combinedDataHead->next != NULL)
             {
-                combinedDataHead->word[strlen(combinedDataHead->word)] = '\0';
+                message = (char *)calloc(strlen(combinedDataHead->word) + 1, 1);
+                strcat(message, combinedDataHead->word);
+                int length = strlen(message);
+                message[length] = '\n';
+                message[length] = '\0';
             }
-            else
-            {
-                combinedDataHead->word[strlen(combinedDataHead->word)] = '\n';
-            }
-            message = (char *)malloc(sizeof(char) * 1 + strlen(combinedDataHead->word));
-            strcat(message, combinedDataHead->word);
         }
 
         if (write(outputFile, message, strlen(message)) < 0)

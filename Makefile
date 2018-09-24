@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -Wall -Werror -fsanitize=address
 
 all: mapred
 
@@ -13,7 +13,7 @@ mapred: threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -c threads.c
 	$(CC) $(CFLAGS) -c sort.c
 	$(CC) $(CFLAGS) -o mapred mapred.c threads.o sort.o
-	rm -f threads.o sort.o 
-	rm -r mapred.dSYM
+
 clean:
-	rm -f threads.o sort.o mapred
+	rm -f threads.o sort.o mapred 
+	rm -r mapred.dSYM
