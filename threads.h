@@ -12,9 +12,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <math.h>
 
-void initializeThreadMemory(bucket *, int, int, int);
-void produceThreads();
+void initializeThreadMemory(node **, int, int, int, char *);
+void produceThreadMaps();
 void *map(void *);
+void writeToFile();
 
 #endif

@@ -15,7 +15,7 @@
  * This struct will hold all of our input
  */
 
-bucket *insertInput(bucket *, char *);
+node *insertInput(node *, char *);
 void parseInputFile();
 void initializeBuckets();
 #endif
