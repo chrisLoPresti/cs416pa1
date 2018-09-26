@@ -19,7 +19,7 @@ void threading_driver(node **, int, int, int, char *);
 void initializeDataLinkListMutexLock();
 void produceThreadMapsAndWaitTillAllThreadsFinish();
 void produceReduceThreadsAndWaitTillAllThreadsFinish();
-void generateEachReduceNodesNumber();
+void generateHowManyNodeEachBucketWillContain();
 void configureBucketsToContainCorrectNumberOfNodes();
 void *map(void *);
 void writeToFile();

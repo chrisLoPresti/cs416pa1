@@ -9,7 +9,7 @@ int reduces;
 int outputFile;
 int totalNodes;
 char *app;
-int *reduceCountArray;
+int *reduceCountArray; // this int array is used to store how many nodes need to be in each bucket for the reduce stage
 
 void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
@@ -29,16 +29,17 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
 
     // sort data
     dataLinkList = sort(dataLinkList, app);
+
     getTotalNodes();
-    printf("Total Nodes: %d\n", totalNodes);
-    printLinkList();
-    printf("reduces wanted: %d\n", reduces);
-    generateEachReduceNodesNumber();
-    printReduceCountArray();
+    // printf("Total Nodes: %d\n", totalNodes);
+    // printLinkList();
+    // printf("reduces wanted: %d\n", reduces);
+    generateHowManyNodeEachBucketWillContain();
+    // printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
-    printBuckets();
+    // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
-    printBuckets();
+    // printBuckets();
     finalReduce();
     printBuckets();
 
@@ -109,7 +110,7 @@ void printBuckets()
 
 }
 
-void generateEachReduceNodesNumber()
+void generateHowManyNodeEachBucketWillContain()
 {
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
@@ -139,7 +140,6 @@ void configureBucketsToContainCorrectNumberOfNodes()
     int x;
     for (x=0; x < reduces; x++)
     {
-        printf("%d\n",x);
         node *head = dataLinkList;
         node *tmp = dataLinkList;
         int y;
@@ -169,6 +169,7 @@ void finalReduce()
             if (strcmp(buckets[x]->word,buckets[x+1]->next->word) == 0)
             {
                 buckets[x]->count = buckets[x]->count +buckets[x+1]->next->count;
+                // check if only one node in bucket
                 if  (buckets[x+1]->next == buckets[x+1]){
                     buckets[x+1] = NULL;
                 }
