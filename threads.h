@@ -30,4 +30,5 @@ void *reduce(void *);
 void getTotalNodes();
 void finalReduce();
 void moveBucketsToTheLeft();
+void createBucketsForReduce();
 #endif

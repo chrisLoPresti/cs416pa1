@@ -30,12 +30,15 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // sort data
     dataLinkList = sort(dataLinkList, app);
 
+    createBucketsForReduce();
+
+
     getTotalNodes();
     // printf("Total Nodes: %d\n", totalNodes);
     // printLinkList();
     // printf("reduces wanted: %d\n", reduces);
     generateHowManyNodesEachBucketWillContain();
-    printReduceCountArray();
+    // printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
     // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
@@ -137,14 +140,25 @@ void generateHowManyNodesEachBucketWillContain()
     printf("finished generating each bucket number\n");
 }
 
+void createBucketsForReduce()
+{
+    buckets = (node **)malloc(sizeof(node *) * reduces);
+    int i;
+    for (i = 0; i < reduces; ++i)
+    {
+        buckets[i] = malloc(sizeof(node));
+        buckets[i] = NULL;
+    }
+}
+
 void configureBucketsToContainCorrectNumberOfNodes()
 {
     printf("starting configuring buckets\n");
     int x;
     for (x=0; x < reduces; x++)
     {
-        if (reduceCountArray[x] == '\0'){
-            break;
+        if (reduceCountArray[x] == 0){
+            continue;
         }
         node *head = dataLinkList;
         node *tmp = dataLinkList;
@@ -156,6 +170,7 @@ void configureBucketsToContainCorrectNumberOfNodes()
         }
         // move main pointer to next starting position 
         dataLinkList = tmp->next; 
+        
 
         // create circular link list in bucket
         buckets[x] = head;
