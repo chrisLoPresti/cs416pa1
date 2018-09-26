@@ -29,4 +29,5 @@ void printBuckets();
 void *reduce(void *);
 void getTotalNodes();
 void finalReduce();
+void moveBucketsToTheLeft();
 #endif

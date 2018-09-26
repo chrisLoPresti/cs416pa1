@@ -35,13 +35,13 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // printLinkList();
     // printf("reduces wanted: %d\n", reduces);
     generateHowManyNodesEachBucketWillContain();
-    // printReduceCountArray();
+    printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
     // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
-    // printBuckets();
-    finalReduce();
     printBuckets();
+    finalReduce();
+    //printBuckets();
 
 
     // writeToFile();
@@ -137,9 +137,13 @@ void generateHowManyNodesEachBucketWillContain()
 
 void configureBucketsToContainCorrectNumberOfNodes()
 {
+    printf("---starting config---\n");
     int x;
     for (x=0; x < reduces; x++)
     {
+        if (reduceCountArray[x] == '\0'){
+            break;
+        }
         node *head = dataLinkList;
         node *tmp = dataLinkList;
         int y;
@@ -160,10 +164,12 @@ void configureBucketsToContainCorrectNumberOfNodes()
 
 void finalReduce()
 {
+    printf("starting final reduce\n");
     int x;
-    for (x = 0; x < reduces-1; x++)
+    for (x = 0; x < reduces; x++)
     {
-        if (buckets[x+1] != NULL)
+        printBuckets();
+        if (buckets[x+1] != NULL && buckets[x] != NULL)
         {
             // if the last node in the bucket x has the same words as the first node in bucket x+1 then need to combine
             if (strcmp(buckets[x]->word,buckets[x+1]->next->word) == 0)
@@ -172,14 +178,28 @@ void finalReduce()
                 // check if only one node in bucket
                 if  (buckets[x+1]->next == buckets[x+1]){
                     buckets[x+1] = NULL;
+                    moveBucketsToTheLeft(x+1); // need to move all buckets over 1 to the left
                 }
                 else
                 {
                     buckets[x+1]->next = buckets[x+1]->next->next;
                 }
+                // reset index to 0 but since for loop will add +1 at the end of the loop must set x -1
+                x = -1;
             }
-        }
+        } 
     }
+}
+
+void moveBucketsToTheLeft(int startingBucket)
+{
+    printf("-----------------");
+    int x; 
+    for(x = startingBucket; x < reduces-1; x++)
+    {
+        buckets[x] = buckets[x+1];   
+    }
+    buckets[reduces-1] = NULL; 
 }
 
 void *reduce(void *bucketNumber)
@@ -225,6 +245,7 @@ void *reduce(void *bucketNumber)
 
 void produceReduceThreadsAndWaitTillAllThreadsFinish()
 {
+    printf("----starting threading-----\n");
     pthread_t reduceThread[reduces];
     int i;
     for (i = 0; i < reduces; i++)
