@@ -28,4 +28,5 @@ void printReduceCountArray();
 void printBuckets();
 void *reduce(void *);
 void getTotalNodes();
+void finalReduce();
 #endif

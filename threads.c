@@ -16,7 +16,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // initialize all information 
     buckets = newBuckets;
     mapsOrThreads = newMapsOrThreads;
-    reduces = newReduces+1; 
+    reduces = newReduces; 
     outputFile = output;
     app = malloc(strlen(application) + 1);
     strcpy(app, application);
@@ -31,21 +31,21 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     dataLinkList = sort(dataLinkList, app);
     getTotalNodes();
     printf("Total Nodes: %d\n", totalNodes);
-
     printLinkList();
     printf("reduces wanted: %d\n", reduces);
     generateEachReduceNodesNumber();
     printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
-
     printBuckets();
-    
-    //reduce((void *) 0);
     produceReduceThreadsAndWaitTillAllThreadsFinish();
-
     printBuckets();
+    finalReduce();
+    printBuckets();
+
+
     // writeToFile();
 }
+
 
 void getTotalNodes()
 {
@@ -122,7 +122,7 @@ void generateEachReduceNodesNumber()
     {
         reduceCountArray[x] = 0;
     }
-    
+
     for(x = 0; x < totalNodes; x++)
     {
         if (reduceCountArrayIndex == reduces)
@@ -156,6 +156,29 @@ void configureBucketsToContainCorrectNumberOfNodes()
         tmp->next = buckets[x];
         buckets[x] = tmp;
     } 
+}
+
+void finalReduce()
+{
+    int x;
+    for (x = 0; x < reduces-1; x++)
+    {
+        if (buckets[x+1] != NULL)
+        {
+            // if the last node in the bucket x has the same words as the first node in bucket x+1 then need to combine
+            if (strcmp(buckets[x]->word,buckets[x+1]->next->word) == 0)
+            {
+                buckets[x]->count = buckets[x]->count +buckets[x+1]->next->count;
+                if  (buckets[x+1]->next == buckets[x+1]){
+                    buckets[x+1] = NULL;
+                }
+                else
+                {
+                    buckets[x+1]->next = buckets[x+1]->next->next;
+                }
+            }
+        }
+    }
 }
 
 void *reduce(void *bucketNumber)

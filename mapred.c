@@ -171,19 +171,19 @@ int main(int argc, char **argv)
     if (strcmp(implementation, "-threads") == 0)
     {
         threading_driver(buckets, totalMapsOrExtra, reduces, output, application);
-        int i;
-        for (i = 0; i < totalMapsOrExtra; i++)
-        {
-            while (buckets[i] != NULL)
-            {
+        // int i;
+        // for (i = 0; i < totalMapsOrExtra; i++)
+        // {
+        //     while (buckets[i] != NULL)
+        //     {
 
-                node *ptr = buckets[i];
-                ptr = ptr->next;
-                free(buckets[i]);
-                buckets[i] = NULL;
-            }
-        }
-        free(buckets);
+        //         node *ptr = buckets[i];
+        //         ptr = ptr->next;
+        //         free(buckets[i]);
+        //         buckets[i] = NULL;
+        //     }
+        // }
+        // free(buckets);
     }
     return 0;
 }
