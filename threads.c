@@ -7,7 +7,7 @@ pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
 int outputFile;
-int totalKeys;
+int totalNodes;
 char *app;
 int *reduceCountArray;
 
@@ -29,8 +29,9 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
 
     // sort data
     dataLinkList = sort(dataLinkList, app);
+    getTotalNodes();
+    printf("Total Nodes: %d\n", totalNodes);
 
-    dataLinkListHead = dataLinkList;
     printLinkList();
     printf("reduces wanted: %d\n", reduces);
     generateEachReduceNodesNumber();
@@ -44,6 +45,18 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
 
     printBuckets();
     // writeToFile();
+}
+
+void getTotalNodes()
+{
+    node *tmp = dataLinkList;
+    int x = 0;
+    while (tmp != NULL)
+    {
+        x++;
+        tmp = tmp->next;
+    }
+    totalNodes = x;
 }
 
 void printLinkList()
@@ -101,10 +114,24 @@ void generateEachReduceNodesNumber()
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
     reduceCountArray[reduces] = '\0';
-    reduceCountArray[0] = 17;
-    reduceCountArray[1] = 2;
 
-    // Todo: populate array with correct values 
+    int x;
+    int reduceCountArrayIndex = 0;
+    // zero out all memory
+    for(x = 0; x < reduces; x++)
+    {
+        reduceCountArray[x] = 0;
+    }
+    
+    for(x = 0; x < totalNodes; x++)
+    {
+        if (reduceCountArrayIndex == reduces)
+        {
+            reduceCountArrayIndex = 0;
+        }
+        reduceCountArray[reduceCountArrayIndex] = reduceCountArray[reduceCountArrayIndex] + 1;
+        reduceCountArrayIndex++;
+    }
 }
 
 void configureBucketsToContainCorrectNumberOfNodes()

@@ -27,4 +27,5 @@ void printLinkList();
 void printReduceCountArray();
 void printBuckets();
 void *reduce(void *);
+void getTotalNodes();
 #endif
