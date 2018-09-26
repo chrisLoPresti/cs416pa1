@@ -22,5 +22,7 @@ void generateEachReduceNodesNumber();
 void configureBucketsToContainCorrectNumberOfNodes();
 void *map(void *);
 void writeToFile();
-
+void printLinkList();
+void printReduceCountArray();
+void printBuckets();
 #endif

@@ -16,7 +16,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // initialize all information 
     buckets = newBuckets;
     mapsOrThreads = newMapsOrThreads;
-    reduces = newReduces; 
+    reduces = newReduces+1; 
     outputFile = output;
     app = malloc(strlen(application) + 1);
     strcpy(app, application);
@@ -28,17 +28,77 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     produceThreadMapsAndWaitTillAllThreadsFinish();
 
     // sort data
-    // dataLinkList = sort(dataLinkList);
+    dataLinkList = sort(dataLinkList, app);
 
     dataLinkListHead = dataLinkList;
-    writeToFile();
+    printLinkList();
+    printf("reduces wanted: %d\n", reduces);
+    generateEachReduceNodesNumber();
+    printReduceCountArray();
+    configureBucketsToContainCorrectNumberOfNodes();
+
+    printBuckets();
+    
+    // writeToFile();
+}
+
+void printLinkList()
+{
+    printf("Starting printing link list\n");
+    node *tmp = dataLinkList;
+    int x = 0;
+    while (tmp != NULL)
+    {
+        printf("%s, %d\n" , tmp->word, tmp->count);
+        tmp = tmp->next;
+        x++;
+    }
+    printf("total num of words: %d\n", x);
+    printf("completed printing link list\n");
+}
+
+void printReduceCountArray()
+{
+    printf("Starting printing array of num\n");
+    int x = 0;
+    while (x < reduces)
+    {
+        printf("%d\n" , reduceCountArray[x]);
+        x++;
+    }
+    printf("completed printing array of num\n");
+}
+
+void printBuckets()
+{
+    printf("Starting printing buckets\n");
+    int x;
+    for (x = 0; x < reduces; x++)
+    {
+        printf("Printing data in bucket %d:\n",x);
+        if (buckets[x] == NULL)
+        {
+            break;
+        }
+        node *tmp = buckets[x]->next;
+        while (tmp != buckets[x])
+        {
+            printf("%s, %d\n" , tmp->word, tmp->count);
+            tmp = tmp->next;
+        }
+        printf("%s, %d\n" , tmp->word, tmp->count);
+    }
+    printf("Ending printing buckets\n");
+
 }
 
 void generateEachReduceNodesNumber()
 {
     // create array which will store how many nodes each reduce thread will handle
-    reduceCountArray = malloc(sizeof(int) * reduces + 1);
+    reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
     reduceCountArray[reduces] = '\0';
+    reduceCountArray[0] = 17;
+    reduceCountArray[1] = 1;
 
     // Todo: populate array with correct values 
 }
@@ -48,14 +108,19 @@ void configureBucketsToContainCorrectNumberOfNodes()
     int x;
     for (x=0; x < reduces; x++)
     {
+        printf("%d\n",x);
         node *head = dataLinkList;
         node *tmp = dataLinkList;
         int y;
-        for(y = 0; y < reduceCountArray[x]; y++)
+
+        for(y = 0; y < reduceCountArray[x]-1; y++) // minus one because error was caused without it
         {
             tmp = tmp->next;
         }
-        // create circular link list
+        // move main pointer to next starting position 
+        dataLinkList = tmp->next; 
+
+        // create circular link list in bucket
         buckets[x] = head;
         tmp->next = buckets[x];
         buckets[x] = tmp;
@@ -77,7 +142,9 @@ void *reduce(void *bucketNumber)
         {
             results = head;
             resultsPtr = head;
-        }else{
+        }
+        else
+        {
             if (strcmp(resultsPtr->word, head->word) == 0)
             {
                 resultsPtr->count = resultsPtr->count + head->count;
@@ -94,8 +161,10 @@ void *reduce(void *bucketNumber)
             } 
         }
     }
+    
     resultsPtr->next = results;
     buckets[(int)bucketNumber] = resultsPtr;
+    return NULL;
 }
 
 void initializeDataLinkListMutexLock()
