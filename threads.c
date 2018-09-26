@@ -1,6 +1,6 @@
 #include "threads.h"
 
-node **buckets;
+node **buckets; // buckets used in reduce are circular and point to last node 
 node *dataLinkList;
 node *dataLinkListHead;
 pthread_mutex_t dataLock;
@@ -60,6 +60,42 @@ void configureBucketsToContainCorrectNumberOfNodes()
         tmp->next = buckets[x];
         buckets[x] = tmp;
     } 
+}
+
+void *reduce(void *bucketNumber)
+{
+    // not sure this line of code works 
+    node *tail = buckets[(int)bucketNumber];
+    node *head = tail->next;
+    tail->next = NULL; // changes input list from circular to linear
+    node *results = NULL;
+    node *resultsPtr = NULL;
+
+    while (head != NULL)
+    {
+        if (resultsPtr == NULL)
+        {
+            results = head;
+            resultsPtr = head;
+        }else{
+            if (strcmp(resultsPtr->word, head->word) == 0)
+            {
+                resultsPtr->count = resultsPtr->count + head->count;
+                node *tmp = head->next;
+                free(head->word);
+                free(head);
+                head = tmp;
+            }
+            else
+            {
+               resultsPtr->next = head;
+               resultsPtr = resultsPtr->next;
+               head = head->next;
+            } 
+        }
+    }
+    resultsPtr->next = results;
+    buckets[(int)bucketNumber] = resultsPtr;
 }
 
 void initializeDataLinkListMutexLock()
