@@ -2,7 +2,6 @@
 
 node **buckets; // buckets used in reduce are circular and point to last node 
 node *dataLinkList;
-node *dataLinkListHead;
 pthread_mutex_t dataLock;
 int mapsOrThreads;
 int reduces;
@@ -47,7 +46,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     printBuckets();
 
 
-    // writeToFile();
+    passBucketToWriteToFile();
 }
 
 
@@ -341,51 +340,76 @@ void *map(void *keys)
     return NULL;
 }
 
-void writeToFile()
+
+void passBucketToWriteToFile()
 {
-    while (dataLinkListHead != NULL)
+    printf("staring to print to file \n");
+    int x;
+    for (x = 0; x < reduces; x++)
     {
-        char *temp;
-        char *message;
-        int length = 0;
-        if (strcmp(app, "-wordcount") == 0)
+        printf("%d\n", x);
+        if (buckets[x] == NULL)
         {
-            length = floor(log10(abs(dataLinkListHead->count))) + 1;
-            temp = (char *)malloc(sizeof(char) + length + 1);
-            sprintf(temp, "%d", dataLinkListHead->count);
-            if (dataLinkListHead->next == NULL)
-            {
-                temp[strlen(temp)] = '\0';
-            }
-            else
-            {
-                temp[strlen(temp) + 1] = '\0';
-                temp[strlen(temp)] = '\n';
-            }
-
-            message = (char *)malloc(sizeof(char) * length + 3 + strlen(dataLinkListHead->word));
-            strcat(message, dataLinkListHead->word);
-
-            strcat(message, " ");
-            strcat(message, temp);
+            break;
+        }
+        node *head = buckets[x]->next;
+        if (buckets[x] == head)
+        {
+            head-> next = NULL;
         }
         else
         {
-            if (dataLinkListHead->next == NULL)
-            {
-                dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\0';
-            }
-            else
-            {
-                dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\n';
-            }
-            message = (char *)malloc(sizeof(char) * 1 + strlen(dataLinkListHead->word));
-            strcat(message, dataLinkListHead->word);
+            buckets[x]-> next = NULL;
         }
-        if (write(outputFile, message, strlen(message)) < 0)
+        // node *dataLinkListHead = head;
+        // while (dataLinkListHead != NULL)
+        // {
+        //     printf("node %s,%d\n", dataLinkListHead->word,dataLinkListHead->count);
+        //     dataLinkListHead = dataLinkListHead->next;
+        // }
+
+        writeToFile(head);
+    }
+}
+
+void writeToFile(node *head)
+{
+
+    node *dataLinkListHead = head;
+
+    while (dataLinkListHead != NULL)
+    {
+        if (strcmp(app, "-wordcount") == 0)
         {
-            printf("Error writing to the file\n");
-            exit(EXIT_FAILURE);
+
+            if (write(outputFile, dataLinkListHead->word, strlen(dataLinkListHead->word)) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+            if (write(outputFile, ", ", strlen(", ")) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+            // todo change to allow any size int
+            char result[50]; 
+            int num = dataLinkListHead->count; 
+            sprintf(result, "%d", num); 
+
+            int length = floor(log10(abs(dataLinkListHead->count))) + 1;
+            if (write(outputFile, result, length) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if (write(outputFile, "\n", strlen("\n")) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+
         }
         dataLinkListHead = dataLinkListHead->next;
     }
