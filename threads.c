@@ -345,7 +345,7 @@ void passBucketToWriteToFile()
     int x;
     for (x = 0; x < reduces; x++)
     {
-        printf("%d\n", x);
+        //printf("%d\n", x);
         if (buckets[x] == NULL)
         {
             break;
