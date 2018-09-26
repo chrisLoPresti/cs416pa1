@@ -41,11 +41,9 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     configureBucketsToContainCorrectNumberOfNodes();
     // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
-    printBuckets();
+    // printBuckets();
     finalReduce();
-    printBuckets();
-
-
+    // printBuckets();
     passBucketToWriteToFile();
 }
 
@@ -91,7 +89,7 @@ void printReduceCountArray()
 
 void printBuckets()
 {
-    printf("Starting printing buckets\n");
+    //printf("Starting printing buckets\n");
     int x;
     for (x = 0; x < reduces; x++)
     {
@@ -108,13 +106,13 @@ void printBuckets()
         }
         printf("%s, %d\n" , tmp->word, tmp->count);
     }
-    printf("Ending printing buckets\n");
+    //printf("Ending printing buckets\n");
 
 }
 
 void generateHowManyNodesEachBucketWillContain()
 {
-    printf("generating each bucket number\n");
+    //printf("generating each bucket number\n");
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
     reduceCountArray[reduces] = '\0';
@@ -136,7 +134,7 @@ void generateHowManyNodesEachBucketWillContain()
         reduceCountArray[reduceCountArrayIndex] = reduceCountArray[reduceCountArrayIndex] + 1;
         reduceCountArrayIndex++;
     }
-    printf("finished generating each bucket number\n");
+    //printf("finished generating each bucket number\n");
 }
 
 void createBucketsForReduce()
@@ -152,7 +150,7 @@ void createBucketsForReduce()
 
 void configureBucketsToContainCorrectNumberOfNodes()
 {
-    printf("starting configuring buckets\n");
+    //printf("starting configuring buckets\n");
     int x;
     for (x=0; x < reduces; x++)
     {
@@ -176,12 +174,12 @@ void configureBucketsToContainCorrectNumberOfNodes()
         tmp->next = buckets[x];
         buckets[x] = tmp;
     } 
-    printf("finished configuring buckets\n");
+    //printf("finished configuring buckets\n");
 }
 
 void finalReduce()
 {
-    printf("starting final reduce\n");
+    //printf("starting final reduce\n");
     int x;
     for (x = 0; x < reduces-1; x++)
     {
@@ -205,19 +203,19 @@ void finalReduce()
             }
         } 
     }
-    printf("finished final reduce\n");
+    //printf("finished final reduce\n");
 }
 
 void moveBucketsToTheLeft(int startingBucket)
 {
-    printf("starting shifting buckets over\n");
+    //printf("starting shifting buckets over\n");
     int x; 
     for(x = startingBucket; x < reduces-1; x++)
     {
         buckets[x] = buckets[x+1];   
     }
     buckets[reduces-1] = NULL; 
-    printf("finished shifting buckets over\n");
+    //printf("finished shifting buckets over\n");
 }
 
 void *reduce(void *bucketNumber)
@@ -263,7 +261,7 @@ void *reduce(void *bucketNumber)
 
 void produceReduceThreadsAndWaitTillAllThreadsFinish()
 {
-    printf("tarting reduce threading\n");
+    //printf("starting reduce threading\n");
     pthread_t reduceThread[reduces];
     int i;
     for (i = 0; i < reduces; i++)
@@ -281,7 +279,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     {
         pthread_join(reduceThread[i], NULL);
     }
-    printf("finished reduce threading\n");
+    //printf("finished reduce threading\n");
 }
 
 void initializeDataLinkListMutexLock()
@@ -343,7 +341,7 @@ void *map(void *keys)
 
 void passBucketToWriteToFile()
 {
-    printf("staring to print to file \n");
+    //printf("staring to print to file \n");
     int x;
     for (x = 0; x < reduces; x++)
     {
