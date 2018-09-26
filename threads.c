@@ -41,7 +41,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     produceReduceThreadsAndWaitTillAllThreadsFinish();
     printBuckets();
     finalReduce();
-    //printBuckets();
+    printBuckets();
 
 
     // writeToFile();
@@ -112,6 +112,7 @@ void printBuckets()
 
 void generateHowManyNodesEachBucketWillContain()
 {
+    printf("generating each bucket number\n");
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
     reduceCountArray[reduces] = '\0';
@@ -133,11 +134,12 @@ void generateHowManyNodesEachBucketWillContain()
         reduceCountArray[reduceCountArrayIndex] = reduceCountArray[reduceCountArrayIndex] + 1;
         reduceCountArrayIndex++;
     }
+    printf("finished generating each bucket number\n");
 }
 
 void configureBucketsToContainCorrectNumberOfNodes()
 {
-    printf("---starting config---\n");
+    printf("starting configuring buckets\n");
     int x;
     for (x=0; x < reduces; x++)
     {
@@ -160,6 +162,7 @@ void configureBucketsToContainCorrectNumberOfNodes()
         tmp->next = buckets[x];
         buckets[x] = tmp;
     } 
+    printf("finished configuring buckets\n");
 }
 
 void finalReduce()
@@ -168,7 +171,6 @@ void finalReduce()
     int x;
     for (x = 0; x < reduces; x++)
     {
-        printBuckets();
         if (buckets[x+1] != NULL && buckets[x] != NULL)
         {
             // if the last node in the bucket x has the same words as the first node in bucket x+1 then need to combine
@@ -189,17 +191,19 @@ void finalReduce()
             }
         } 
     }
+    printf("finished final reduce\n");
 }
 
 void moveBucketsToTheLeft(int startingBucket)
 {
-    printf("-----------------");
+    printf("starting shifting buckets over\n");
     int x; 
     for(x = startingBucket; x < reduces-1; x++)
     {
         buckets[x] = buckets[x+1];   
     }
     buckets[reduces-1] = NULL; 
+    printf("finished shifting buckets over\n");
 }
 
 void *reduce(void *bucketNumber)
@@ -245,7 +249,7 @@ void *reduce(void *bucketNumber)
 
 void produceReduceThreadsAndWaitTillAllThreadsFinish()
 {
-    printf("----starting threading-----\n");
+    printf("tarting reduce threading\n");
     pthread_t reduceThread[reduces];
     int i;
     for (i = 0; i < reduces; i++)
@@ -263,6 +267,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     {
         pthread_join(reduceThread[i], NULL);
     }
+    printf("finished reduce threading\n");
 }
 
 void initializeDataLinkListMutexLock()
