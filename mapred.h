@@ -3,6 +3,7 @@
 
 #include "structs.h"
 #include "threads.h"
+#include "procs.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

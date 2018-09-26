@@ -185,6 +185,12 @@ int main(int argc, char **argv)
         }
         free(buckets);
     }
+
+    //starting proc handling
+    if (strcmp(implementation, "-procs") == 0)
+    {
+        //do something
+    }
     return 0;
 }
 /* 
