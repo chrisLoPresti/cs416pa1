@@ -411,6 +411,19 @@ void writeToFile(node *head)
             }
 
         }
+        else
+        {
+            if (write(outputFile, dataLinkListHead->word, strlen(dataLinkListHead->word)) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }   
+            if (write(outputFile, "\n", strlen("\n")) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            } 
+        }
         dataLinkListHead = dataLinkListHead->next;
     }
 }
