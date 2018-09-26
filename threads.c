@@ -9,6 +9,7 @@ int reduces;
 int outputFile;
 int totalKeys;
 char *app;
+int *reduceCountArray;
 
 void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
@@ -27,11 +28,38 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     produceThreadMapsAndWaitTillAllThreadsFinish();
 
     // sort data
-    dataLinkList = sort(dataLinkList);
+    // dataLinkList = sort(dataLinkList);
 
     dataLinkListHead = dataLinkList;
     writeToFile();
-    
+}
+
+void generateEachReduceNodesNumber()
+{
+    // create array which will store how many nodes each reduce thread will handle
+    reduceCountArray = malloc(sizeof(int) * reduces + 1);
+    reduceCountArray[reduces] = '\0';
+
+    // Todo: populate array with correct values 
+}
+
+void configureBucketsToContainCorrectNumberOfNodes()
+{
+    int x;
+    for (x=0; x < reduces; x++)
+    {
+        node *head = dataLinkList;
+        node *tmp = dataLinkList;
+        int y;
+        for(y = 0; y < reduceCountArray[x]; y++)
+        {
+            tmp = tmp->next;
+        }
+        // create circular link list
+        buckets[x] = head;
+        tmp->next = buckets[x];
+        buckets[x] = tmp;
+    } 
 }
 
 void initializeDataLinkListMutexLock()
@@ -60,10 +88,6 @@ void produceThreadMapsAndWaitTillAllThreadsFinish()
     {
         pthread_join(mapperThread[i], NULL);
     }
-
-    dataLinkList = sort(dataLinkList, app);
-    dataLinkListHead = dataLinkList;
-    writeToFile();
 }
 
 void *map(void *keys)
@@ -103,7 +127,6 @@ void writeToFile()
         int length = 0;
         if (strcmp(app, "-wordcount") == 0)
         {
-<<<<<<< HEAD
             length = floor(log10(abs(dataLinkListHead->count))) + 1;
             temp = (char *)malloc(sizeof(char) + length + 1);
             sprintf(temp, "%d", dataLinkListHead->count);
@@ -112,30 +135,19 @@ void writeToFile()
                 temp[strlen(temp)] = '\0';
             }
             else
-=======
-            length = floor(log10(abs(combinedDataHead->count))) + 1;
-            temp = (char *)malloc(sizeof(char) + length + 2);
-            sprintf(temp, "%d", combinedDataHead->count);
-            if (combinedDataHead->next != NULL)
->>>>>>> master
             {
                 temp[strlen(temp) + 1] = '\0';
                 temp[strlen(temp)] = '\n';
             }
-<<<<<<< HEAD
+
             message = (char *)malloc(sizeof(char) * length + 3 + strlen(dataLinkListHead->word));
             strcat(message, dataLinkListHead->word);
-=======
-            message = (char *)calloc(strlen(temp) + strlen(combinedDataHead->word) + 2, 1);
 
-            strcat(message, combinedDataHead->word);
->>>>>>> master
             strcat(message, " ");
             strcat(message, temp);
         }
         else
         {
-<<<<<<< HEAD
             if (dataLinkListHead->next == NULL)
             {
                 dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\0';
@@ -146,23 +158,7 @@ void writeToFile()
             }
             message = (char *)malloc(sizeof(char) * 1 + strlen(dataLinkListHead->word));
             strcat(message, dataLinkListHead->word);
-=======
-            if (combinedDataHead->next != NULL)
-            {
-                message = (char *)calloc(strlen(combinedDataHead->word) + 2, 1);
-                strcat(message, combinedDataHead->word);
-                int length = strlen(message);
-                message[length] = '\n';
-                message[length + 1] = '\0';
-            }
-            else
-            {
-                message = (char *)calloc(strlen(combinedDataHead->word) + 1, 1);
-                strcat(message, combinedDataHead->word);
-            }
->>>>>>> master
         }
-
         if (write(outputFile, message, strlen(message)) < 0)
         {
             printf("Error writing to the file\n");
