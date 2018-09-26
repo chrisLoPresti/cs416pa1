@@ -11,24 +11,26 @@ int totalMapsOrExtra;
 
 void parseInputFile()
 {
-    char *temp = (char *)malloc(sizeof(char) * 2);
-    char singleChar;
+    char *temp = (char *)calloc(1, 1);
+    char *singleChar = (char *)calloc(2, 1);
+
     int itterator = 0;
-    while (read(input, &singleChar, 1) != 0)
+    while (read(input, &singleChar[0], 1) != 0)
     {
-        if (singleChar != ' ' && singleChar != '\n' && singleChar != '\t' && singleChar != '\r' && singleChar != 0)
+        if (strcmp(singleChar, "") != 0 && singleChar[0] != ' ' && singleChar[0] != '\n' && singleChar[0] != '\t' && singleChar[0] != '\r' && singleChar[0] != '\0' && singleChar[0] != 0)
         {
-            temp = realloc(temp, strlen(temp) + 1);
-            temp[strlen(temp)] = singleChar;
-            temp[strlen(temp) + 1] = '\0';
+            temp = realloc(temp, strlen(temp) + 2);
+            strcat(temp, singleChar);
             continue;
         }
         if (strlen(temp) > 0)
         {
-            for (char *p = temp; *p; ++p)
+            char *p;
+            for (p = temp; *p; ++p)
                 *p = tolower(*p);
             buckets[itterator] = insertInput(buckets[itterator], temp);
-            temp = realloc(NULL, 0);
+            free(temp);
+            temp = (char *)calloc(1, 1);
             ++itterator;
             if (itterator == totalMapsOrExtra)
             {
@@ -38,11 +40,12 @@ void parseInputFile()
     }
     if (strlen(temp) > 0)
     {
-        for (char *p = temp; *p; ++p)
+        char *p;
+        for (p = temp; *p; ++p)
             *p = tolower(*p);
         buckets[itterator] = insertInput(buckets[itterator], temp);
     }
-    if (buckets[0]->word == NULL)
+    if (buckets[0] == NULL)
     {
         printf("The input file was empty, or there was an error reading from it\n");
         exit(EXIT_FAILURE);

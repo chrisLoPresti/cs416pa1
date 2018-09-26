@@ -6,6 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-node *sort(node *);
+node *sort(node *, char *);
 
 #endif

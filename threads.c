@@ -60,6 +60,10 @@ void produceThreadMapsAndWaitTillAllThreadsFinish()
     {
         pthread_join(mapperThread[i], NULL);
     }
+
+    dataLinkList = sort(dataLinkList, app);
+    dataLinkListHead = dataLinkList;
+    writeToFile();
 }
 
 void *map(void *keys)
@@ -99,6 +103,7 @@ void writeToFile()
         int length = 0;
         if (strcmp(app, "-wordcount") == 0)
         {
+<<<<<<< HEAD
             length = floor(log10(abs(dataLinkListHead->count))) + 1;
             temp = (char *)malloc(sizeof(char) + length + 1);
             sprintf(temp, "%d", dataLinkListHead->count);
@@ -107,16 +112,30 @@ void writeToFile()
                 temp[strlen(temp)] = '\0';
             }
             else
+=======
+            length = floor(log10(abs(combinedDataHead->count))) + 1;
+            temp = (char *)malloc(sizeof(char) + length + 2);
+            sprintf(temp, "%d", combinedDataHead->count);
+            if (combinedDataHead->next != NULL)
+>>>>>>> master
             {
+                temp[strlen(temp) + 1] = '\0';
                 temp[strlen(temp)] = '\n';
             }
+<<<<<<< HEAD
             message = (char *)malloc(sizeof(char) * length + 3 + strlen(dataLinkListHead->word));
             strcat(message, dataLinkListHead->word);
+=======
+            message = (char *)calloc(strlen(temp) + strlen(combinedDataHead->word) + 2, 1);
+
+            strcat(message, combinedDataHead->word);
+>>>>>>> master
             strcat(message, " ");
             strcat(message, temp);
         }
         else
         {
+<<<<<<< HEAD
             if (dataLinkListHead->next == NULL)
             {
                 dataLinkListHead->word[strlen(dataLinkListHead->word)] = '\0';
@@ -127,6 +146,21 @@ void writeToFile()
             }
             message = (char *)malloc(sizeof(char) * 1 + strlen(dataLinkListHead->word));
             strcat(message, dataLinkListHead->word);
+=======
+            if (combinedDataHead->next != NULL)
+            {
+                message = (char *)calloc(strlen(combinedDataHead->word) + 2, 1);
+                strcat(message, combinedDataHead->word);
+                int length = strlen(message);
+                message[length] = '\n';
+                message[length + 1] = '\0';
+            }
+            else
+            {
+                message = (char *)calloc(strlen(combinedDataHead->word) + 1, 1);
+                strcat(message, combinedDataHead->word);
+            }
+>>>>>>> master
         }
 
         if (write(outputFile, message, strlen(message)) < 0)

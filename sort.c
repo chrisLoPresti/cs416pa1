@@ -8,15 +8,27 @@
 
 */
 
-node *sort(node *head)
+node *sort(node *head, char *app)
 {
     node *current;
     node *ptr;
+    int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
     for (current = head; current != NULL; current = current->next)
     {
         for (ptr = head; ptr != NULL; ptr = ptr->next)
         {
-            if (strcmp(ptr->word, current->word) > 0)
+            if (!numbers && strcmp(ptr->word, current->word) > 0)
+            {
+                int count = current->count;
+                char *tempWord = current->word;
+
+                current->count = ptr->count;
+                current->word = ptr->word;
+
+                ptr->count = count;
+                ptr->word = tempWord;
+            }
+            else if (atoi(ptr->word) > atoi(current->word))
             {
                 int count = current->count;
                 char *tempWord = current->word;
@@ -29,6 +41,7 @@ node *sort(node *head)
             }
         }
     }
+
     return head;
 }
 
@@ -64,7 +77,7 @@ void testSort()
         printf("%s,%d\n", temp->word, temp->count);
         temp = temp->next;
     }
-    node *head = sort(nodes);
+    node *head = sort(nodes, "-sort");
     printf("Printing sorted link list: \n");
     while (head != NULL)
     {
