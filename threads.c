@@ -9,7 +9,7 @@ int reduces;
 int outputFile;
 int totalNodes;
 char *app;
-int *reduceCountArray; // this int array is used to store how many nodes need to be in each bucket for the reduce stage
+int *reduceCountArray; // this int array is used to store how many nodes are needed for each bucket in the reduce stage
 
 void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
@@ -34,7 +34,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // printf("Total Nodes: %d\n", totalNodes);
     // printLinkList();
     // printf("reduces wanted: %d\n", reduces);
-    generateHowManyNodeEachBucketWillContain();
+    generateHowManyNodesEachBucketWillContain();
     // printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
     // printBuckets();
@@ -110,7 +110,7 @@ void printBuckets()
 
 }
 
-void generateHowManyNodeEachBucketWillContain()
+void generateHowManyNodesEachBucketWillContain()
 {
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
