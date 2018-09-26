@@ -39,6 +39,10 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
 
     printBuckets();
     
+    //reduce((void *) 0);
+    produceReduceThreadsAndWaitTillAllThreadsFinish();
+
+    printBuckets();
     // writeToFile();
 }
 
@@ -98,7 +102,7 @@ void generateEachReduceNodesNumber()
     reduceCountArray = malloc( (sizeof(int) * reduces) + 1 * sizeof('\0'));
     reduceCountArray[reduces] = '\0';
     reduceCountArray[0] = 17;
-    reduceCountArray[1] = 1;
+    reduceCountArray[1] = 2;
 
     // Todo: populate array with correct values 
 }
@@ -129,7 +133,6 @@ void configureBucketsToContainCorrectNumberOfNodes()
 
 void *reduce(void *bucketNumber)
 {
-    // not sure this line of code works 
     node *tail = buckets[(int)bucketNumber];
     node *head = tail->next;
     tail->next = NULL; // changes input list from circular to linear
@@ -142,6 +145,8 @@ void *reduce(void *bucketNumber)
         {
             results = head;
             resultsPtr = head;
+            head = head->next;
+
         }
         else
         {
@@ -165,6 +170,27 @@ void *reduce(void *bucketNumber)
     resultsPtr->next = results;
     buckets[(int)bucketNumber] = resultsPtr;
     return NULL;
+}
+
+void produceReduceThreadsAndWaitTillAllThreadsFinish()
+{
+    pthread_t reduceThread[reduces];
+    int i;
+    for (i = 0; i < reduces; i++)
+    {
+        reduceCountArray[i] = i;
+        // not sure why you need (size_t) 
+        if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *) (size_t) reduceCountArray[i] ) != 0)
+        {
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    for (i = 0; i < reduces; i++)
+    {
+        pthread_join(reduceThread[i], NULL);
+    }
 }
 
 void initializeDataLinkListMutexLock()
