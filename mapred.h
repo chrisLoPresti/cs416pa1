@@ -3,6 +3,7 @@
 
 #include "structs.h"
 #include "threads.h"
+#include "non_mapreduce.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

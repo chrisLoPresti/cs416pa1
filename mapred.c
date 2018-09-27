@@ -61,6 +61,7 @@ node *insertInput(node *pointer, char *temp)
     strcpy(tempData->word, temp);
     tempData->word[strlen(tempData->word)] = '\0';
     tempData->next = pointer;
+    tempData->count = 0;
     pointer = tempData;
     return pointer;
 }
@@ -158,6 +159,11 @@ int main(int argc, char **argv)
             printf("You entered an invalid --num_threads value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
+        initializeBuckets();
+        parseInputFile();
+
+        nonMapReduceDriver(buckets, numThreads, output, application);
+        return 0;
     }
     //if the input stream is invalid let them know
     else
