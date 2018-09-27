@@ -14,9 +14,20 @@
 #include <fcntl.h>
 #include <math.h>
 
-void initializeThreadMemory(node **, int, int, int, char *);
-void produceThreadMaps();
+void threading_driver(node **, int, int, int, char *, int);
+void initializeDataLinkListMutexLock();
+void produceThreadMapsAndWaitTillAllThreadsFinish();
+void produceReduceThreadsAndWaitTillAllThreadsFinish();
+void generateHowManyNodesEachBucketWillContain();
+void configureBucketsToContainCorrectNumberOfNodes();
 void *map(void *);
 void writeToFile();
-
+void printLinkList();
+void printReduceCountArray();
+void printBuckets();
+void *reduce(void *);
+void getTotalNodes();
+void finalReduce();
+void moveBucketsToTheLeft();
+void processWrite(node *);
 #endif
