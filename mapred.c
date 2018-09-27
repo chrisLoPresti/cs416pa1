@@ -170,20 +170,20 @@ int main(int argc, char **argv)
     parseInputFile();
     if (strcmp(implementation, "-threads") == 0)
     {
-        initializeThreadMemory(buckets, totalMapsOrExtra, reduces, output, application);
-        int i;
-        for (i = 0; i < totalMapsOrExtra; i++)
-        {
-            while (buckets[i] != NULL)
-            {
+        threading_driver(buckets, totalMapsOrExtra, reduces, output, application);
+        // int i;
+        // for (i = 0; i < totalMapsOrExtra; i++)
+        // {
+        //     while (buckets[i] != NULL)
+        //     {
 
-                node *ptr = buckets[i];
-                ptr = ptr->next;
-                free(buckets[i]);
-                buckets[i] = NULL;
-            }
-        }
-        free(buckets);
+        //         node *ptr = buckets[i];
+        //         ptr = ptr->next;
+        //         free(buckets[i]);
+        //         buckets[i] = NULL;
+        //     }
+        // }
+        // free(buckets);
     }
 
     //starting proc handling
