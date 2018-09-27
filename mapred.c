@@ -190,17 +190,7 @@ int main(int argc, char **argv)
     if (strcmp(implementation, "-procs") == 0)
     {
         //Initialize shm_id
-        int shm_id;
-        shm_id = initializeSHM();
-
-        char* shm_addr;
-        shm_addr = getSHMAddr(shm_id)
-
-        //Doing doing this in here because we have to use exec
-        for ( int i = 0; i < totalMapsOrExtra; i++ )
-        {
-            pid_t pid = fork();
-        }
+        startProcessing(buckets, totalMapsOrExtra, reduces, output, application);
         
     }
     return 0;

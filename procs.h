@@ -13,8 +13,14 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <math.h>
+#include  <sys/types.h>
+#include  <sys/ipc.h>
+#include  <sys/shm.h>
 
 void *map(void *);
 void writeToFile();
+char* initializeSHM();
+char* getSHMAddr(int shm_id);
+int startProcessing(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application);
 
 #endif
