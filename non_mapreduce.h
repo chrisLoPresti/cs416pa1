@@ -3,6 +3,7 @@
 
 #include "non_mapreduce.h"
 #include "structs.h"
+#include "sort.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -22,8 +23,9 @@ void configureBucketsToContainCorrectNumberOfNodesForNonMapReduce();
 void *nonMapReduce(void *);
 void produceNonMapReduceThreadsAndWaitTillAllThreadsFinish();
 void passBucketToWriteToFileForNonMapReduce();
-void writeToFileForNonMapReduce(node *head);
+void writeToFileForNonMapReduce(node *);
 void printBucketsForNonMapReduce();
 void finalReduceForNonMapReduce();
 void moveBucketsToTheLeftForNonMapReduce(int );
+void getTotalNodesForNonMapReduce();
 #endif

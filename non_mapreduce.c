@@ -1,4 +1,4 @@
-#include "threads.h"
+#include "non_mapreduce.h"
 
 node **buckets; // items in buckets are stored as a circular link list
 node *dataLinkList;
@@ -27,6 +27,9 @@ void nonMapReduceDriver(node **newBuckets, int numOfThreads, int fileToWrite, ch
     // sort link list
     dataLinkList = sort(dataLinkList, app);
 
+    // get total node in the link list
+    getTotalNodesForNonMapReduce();
+
     // generate how many node will go in to each bucket 
     generateHowManyNodesEachBucketWillContainForNonMapReduce();
 
@@ -35,12 +38,25 @@ void nonMapReduceDriver(node **newBuckets, int numOfThreads, int fileToWrite, ch
 
     // start mapping and reducing
     produceNonMapReduceThreadsAndWaitTillAllThreadsFinish();
-
+    
     // combine all adjoining nodes that match 
     finalReduceForNonMapReduce();
 
     // print results to file
     passBucketToWriteToFileForNonMapReduce();
+    return;
+}
+
+void getTotalNodesForNonMapReduce()
+{
+    node *tmp = dataLinkList;
+    int x = 0;
+    while (tmp != NULL)
+    {
+        x++;
+        tmp = tmp->next;
+    }
+    totalNodes = x;
 }
 
 void printBucketsForNonMapReduce()
@@ -109,7 +125,7 @@ void deconstructBucketInToLinkList()
 
 void generateHowManyNodesEachBucketWillContainForNonMapReduce()
 {
-    printf("generating each bucket number\n");
+    //printf("generating each bucket number\n");
     // create array which will store how many nodes each reduce thread will handle
     reduceCountArray = malloc( (sizeof(int) * totalThreads) + 1 * sizeof('\0'));
     reduceCountArray[totalThreads] = '\0';
@@ -122,7 +138,7 @@ void generateHowManyNodesEachBucketWillContainForNonMapReduce()
         reduceCountArray[x] = 0;
     }
 
-    for(x = 0; x < totalThreads; x++)
+    for(x = 0; x < totalNodes; x++)
     {
         if (reduceCountArrayIndex == totalThreads)
         {
@@ -131,12 +147,12 @@ void generateHowManyNodesEachBucketWillContainForNonMapReduce()
         reduceCountArray[reduceCountArrayIndex] = reduceCountArray[reduceCountArrayIndex] + 1;
         reduceCountArrayIndex++;
     }
-    printf("finished generating each bucket number\n");
+    //printf("finished generating each bucket number\n");
 }
 
 void configureBucketsToContainCorrectNumberOfNodesForNonMapReduce()
 {
-    printf("starting configuring buckets\n");
+    //printf("starting configuring buckets\n");
     int x;
     for (x=0; x < totalThreads; x++)
     {
@@ -160,7 +176,7 @@ void configureBucketsToContainCorrectNumberOfNodesForNonMapReduce()
         tmp->next = buckets[x];
         buckets[x] = tmp;
     } 
-    printf("finished configuring buckets\n");
+    //printf("finished configuring buckets\n");
 }
 
 void *nonMapReduce(void *bucketNumber)
@@ -218,7 +234,7 @@ void *nonMapReduce(void *bucketNumber)
 
 void produceNonMapReduceThreadsAndWaitTillAllThreadsFinish()
 {
-    printf("starting reduce threading\n");
+    //printf("starting reduce threading\n");
     pthread_t reduceThread[totalThreads];
     int i;
     for (i = 0; i < totalThreads; i++)
@@ -236,12 +252,12 @@ void produceNonMapReduceThreadsAndWaitTillAllThreadsFinish()
     {
         pthread_join(reduceThread[i], NULL);
     }
-    printf("finished reduce threading\n");
+    //printf("finished reduce threading\n");
 }
 
 void finalReduceForNonMapReduce()
 {
-    printf("starting final reduce\n");
+    //printf("starting final reduce\n");
     int x;
     for (x = 0; x < totalThreads-1; x++)
     {
@@ -265,7 +281,7 @@ void finalReduceForNonMapReduce()
             }
         } 
     }
-    printf("finished final reduce\n");
+    //printf("finished final reduce\n");
 }
 
 void moveBucketsToTheLeftForNonMapReduce(int startingBucket)
