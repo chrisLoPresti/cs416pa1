@@ -9,8 +9,15 @@ int *reduceCountArray; // this int array is used to store how many nodes are nee
 int outputFile; // output file
 
 
-void nonMapReduceDriver()
+void nonMapReduceDriver(node **newBuckets, int numOfThreads, int fileToWrite, char * application)
 {
+    // initialize all information 
+    buckets = newBuckets;
+    totalThreads = numOfThreads; 
+    outputFile = fileToWrite;
+    app = malloc(strlen(application) + 1);
+    strcpy(app, application);
+    
     // combine all node from the bucket in to link list.
     deconstructBucketInToLinkList();
 
