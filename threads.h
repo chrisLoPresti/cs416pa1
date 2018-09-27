@@ -14,8 +14,7 @@
 #include <fcntl.h>
 #include <math.h>
 
-
-void threading_driver(node **, int, int, int, char *);
+void threading_driver(node **, int, int, int, char *, int);
 void initializeDataLinkListMutexLock();
 void produceThreadMapsAndWaitTillAllThreadsFinish();
 void produceReduceThreadsAndWaitTillAllThreadsFinish();
@@ -30,4 +29,5 @@ void *reduce(void *);
 void getTotalNodes();
 void finalReduce();
 void moveBucketsToTheLeft();
+void processWrite(node *);
 #endif

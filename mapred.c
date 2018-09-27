@@ -1,14 +1,17 @@
 #include "mapred.h"
-static char *application;
-static char *implementation;
-static int numThreads;
-static int reduces;
-static int maps;
-static int input;
-static int output;
+char *application;
+char *implementation;
+int numThreads;
+int reduces;
+int maps;
+int input;
+int output;
 node **buckets;
 int totalMapsOrExtra;
+int finalMapsOrExtra;
+int keyCount;
 
+//parese the input file and pull out words
 void parseInputFile()
 {
     char *temp = (char *)calloc(1, 1);
@@ -17,7 +20,7 @@ void parseInputFile()
     int itterator = 0;
     while (read(input, &singleChar[0], 1) != 0)
     {
-        if (strcmp(singleChar, "") != 0 && singleChar[0] != ' ' && singleChar[0] != '\n' && singleChar[0] != '\t' && singleChar[0] != '\r' && singleChar[0] != '\0' && singleChar[0] != 0)
+        if (validinput(singleChar[0]))
         {
             temp = realloc(temp, strlen(temp) + 2);
             strcat(temp, singleChar);
@@ -28,6 +31,7 @@ void parseInputFile()
             char *p;
             for (p = temp; *p; ++p)
                 *p = tolower(*p);
+            //add the words to our bucekts
             buckets[itterator] = insertInput(buckets[itterator], temp);
             free(temp);
             temp = (char *)calloc(1, 1);
@@ -50,10 +54,25 @@ void parseInputFile()
         printf("The input file was empty, or there was an error reading from it\n");
         exit(EXIT_FAILURE);
     }
+    finalMapsOrExtra = keyCount < totalMapsOrExtra ? itterator + 1 : totalMapsOrExtra;
     free(temp);
     close(input);
 }
 
+//checks to make sure the character is not a delimiter
+int validinput(char character)
+{
+    if (character != ' ' && character != '\n' && character != '\t' && character != '\r' && character != '\0' && character != 0 && character != '.' && character != ',' && character != ';' && character != '!' && character != '-')
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+//adds a full word to our buckets
 node *insertInput(node *pointer, char *temp)
 {
     node *tempData = (node *)malloc(sizeof(node));
@@ -62,9 +81,12 @@ node *insertInput(node *pointer, char *temp)
     tempData->word[strlen(tempData->word)] = '\0';
     tempData->next = pointer;
     pointer = tempData;
+    tempData->count = 0;
+    ++keyCount;
     return pointer;
 }
 
+//creates our buckets based off of the number of requested maps
 void initializeBuckets()
 {
     totalMapsOrExtra = maps ? maps : numThreads;
@@ -78,6 +100,18 @@ void initializeBuckets()
     }
 }
 
+//removes any buckets that were not used
+void *cleanBuckets()
+{
+    int i;
+    for (i = finalMapsOrExtra; i < totalMapsOrExtra; ++i)
+    {
+        free(buckets[i]);
+    }
+    return NULL;
+}
+
+//drives the program
 int main(int argc, char **argv)
 {
     // if we do not have 6 or 7 inputs we can not continue
@@ -166,36 +200,38 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    //create our buckets
     initializeBuckets();
+    //read the input file and fill the buckets
     parseInputFile();
+    //create a thread to clean the buckets we did not use
+
+    pthread_t cleaner;
+    if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
+    {
+        printf("Error creating thread\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (strcmp(implementation, "-threads") == 0)
     {
-        threading_driver(buckets, totalMapsOrExtra, reduces, output, application);
-        // int i;
-        // for (i = 0; i < totalMapsOrExtra; i++)
-        // {
-        //     while (buckets[i] != NULL)
-        //     {
-
-        //         node *ptr = buckets[i];
-        //         ptr = ptr->next;
-        //         free(buckets[i]);
-        //         buckets[i] = NULL;
-        //     }
-        // }
-        // free(buckets);
+        threading_driver(buckets, finalMapsOrExtra, reduces, output, application, keyCount);
     }
+    pthread_join(cleaner, NULL);
     return 0;
 }
+
 /* 
 this is code you can use to test to see if the buckets have information
-int i = 0;
-for (i = 0; i < totalMapsOrExtra - 1; i++)
-{
-    while (head[i] != NULL)
+
+    printf("(we need %d, buckets and will remove any excess)\n", finalMapsOrExtra);
+    int i = 0;
+    for (i = 0; i < finalMapsOrExtra; i++)
     {
-        printf("(%s,%d)\n", head[i]->word, head[i]->count);
-        head[i] = head[i]->next;
+        while (buckets[i] != NULL)
+        {
+            printf("(%s,%d)\n", buckets[i]->word, buckets[i]->count);
+            buckets[i] = buckets[i]->next;
+        }
     }
-}
-*/
+    */
