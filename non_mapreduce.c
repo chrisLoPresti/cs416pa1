@@ -189,12 +189,12 @@ void *nonMapReduce(void *bucketNumber)
 
     while (head != NULL)
     {
+        if (head->count == 0)
+        {
+            head->count = 1;
+        }
         if (resultsPtr == NULL)
         {
-            if (head->count == 0)
-            {
-                head->count = 1;
-            }
             results = head;
             resultsPtr = head;
             head = head->next;
@@ -204,10 +204,6 @@ void *nonMapReduce(void *bucketNumber)
         {
             if (strcmp(resultsPtr->word, head->word) == 0)
             {
-                if (head->count == 0)
-                {
-                    head->count = 1;
-                }
                 resultsPtr->count = resultsPtr->count + head->count;
                 node *tmp = head->next;
                 free(head->word);
@@ -216,10 +212,6 @@ void *nonMapReduce(void *bucketNumber)
             }
             else
             {
-                if (head->count == 0)
-                {
-                    head->count = 1;
-                }
                resultsPtr->next = head;
                resultsPtr = resultsPtr->next;
                head = head->next;
