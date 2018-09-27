@@ -14,7 +14,7 @@ void nonMapReduceDriver()
     // combine all node from the bucket in to link list.
     deconstructBucketInToLinkList();
 
-    // set all buckets pointers to null
+    // set all bucket pointer's point to null
     nullAllBucketsPointers();
 
     // sort link list
