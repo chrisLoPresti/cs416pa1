@@ -22,22 +22,22 @@ int main()
 	
 
         //Doing doing this in here because we have to use exec
-	/*int i;
+	int i;
 	pid_t pid;
         for ( i = 0; i < totalMapsOrExtra; i++ )
         {
             	pid = fork();
 		if ( pid == 0 ){
 			printf("child created\n");
-			tempData->word = "child";
-			memcpy(w, word, strlen(s)+1);
-			printf("%s\n", x->w);
+			temp = "child";
+			memcpy(x->word, temp, strlen(temp)+1);
+			printf("%s\n", x->word);
 		} else {
-			wait(pid);
-			printf("%s\n", x->w);
+			//wait(pid); //uncommenting->parent prints first with original temp string
+			printf("%s\n", x->word);
 			return 0;
 		}
-        }*/
+        }
 
 	
 }
