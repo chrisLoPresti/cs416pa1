@@ -10,7 +10,7 @@ node **buckets;
 int totalMapsOrExtra;
 int finalMapsOrExtra;
 int keyCount;
-
+int charCount;
 //parese the input file and pull out words
 void parseInputFile()
 {
@@ -24,6 +24,7 @@ void parseInputFile()
         {
             temp = realloc(temp, strlen(temp) + 2);
             strcat(temp, singleChar);
+            ++charCount;
             continue;
         }
         if (strlen(temp) > 0)
@@ -83,6 +84,7 @@ node *insertInput(node *pointer, char *temp)
     pointer = tempData;
     tempData->count = 0;
     ++keyCount;
+    ++charCount;
     return pointer;
 }
 
@@ -206,18 +208,23 @@ int main(int argc, char **argv)
     parseInputFile();
     //create a thread to clean the buckets we did not use
 
-    pthread_t cleaner;
-    if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
-    {
-        printf("Error creating thread\n");
-        exit(EXIT_FAILURE);
-    }
-
     if (strcmp(implementation, "-threads") == 0)
     {
         threading_driver(buckets, finalMapsOrExtra, reduces, output, application, keyCount);
+
+        pthread_t cleaner;
+        if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
+        {
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
+        }
+        pthread_join(cleaner, NULL);
     }
-    pthread_join(cleaner, NULL);
+    else
+    {
+        createSharedMemory(buckets, keyCount, finalMapsOrExtra, charCount);
+    }
+
     return 0;
 }
 
