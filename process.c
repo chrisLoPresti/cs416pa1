@@ -1,117 +1,113 @@
 #include "process.h"
 
-key_t keys = 123458;
+key_t key = 12345;
+int shm_id;
+int *shm_addr;
+node *oneList;
+int totalKeys;
+
+void mapProcs(int i)
+{
+    shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
+    if (!shm_id)
+    {
+        perror("shmget: ");
+        exit(EXIT_FAILURE);
+    }
+
+    shm_addr = shmat(shm_id, NULL, 0);
+    if (!shm_addr)
+    {
+        perror("shmat: ");
+        exit(EXIT_FAILURE);
+    }
+    int c;
+    for (c = 0; c < totalKeys; ++c)
+    {
+        if (*(shm_addr + c) == -i)
+        {
+            *(shm_addr + c) = 1;
+        }
+    }
+}
+
+void syncLists()
+{
+    int c;
+    for (c = 0; c < totalKeys; ++c)
+    {
+        oneList[c].count = *(shm_addr + c);
+    }
+
+    //this will print and confirm our mapping
+    for (c = 0; c < totalKeys; ++c)
+    {
+        printf("%s %d\n", oneList[c].word, oneList[c].count);
+    }
+}
 
 void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int charCount)
 {
-    //create shared memory to fit every single character, plus an int for a count, plus a comma for a delimiter
-    //keyCount: we need that many delimiters, charCount: how many cahrs we have total
-    int sharedMemKeys;
-    int size = keyCount * sizeof(int) + keyCount * charCount + 1;
-    if ((sharedMemKeys = shmget(keys, size, IPC_CREAT | 0666)) < 0)
+    totalKeys = keyCount;
+
+    shm_id = shmget(key, sizeof(int) * keyCount, IPC_CREAT | 0600);
+    if (!shm_id)
     {
-        perror("shmget error.");
-        exit(EXIT_FAILURE);
-    }
-    char *wordArray;
-    if ((wordArray = (char *)shmat(sharedMemKeys, NULL, 0)) == (void *)-1)
-    {
-        shmdt((void *)wordArray);
-        shmctl(sharedMemKeys, IPC_RMID, NULL);
-        perror("shmat error");
+        perror("shmget: ");
         exit(EXIT_FAILURE);
     }
 
-    int i, index;
-    index = 0;
-    node *prev;
-    char buffer[1000];
-    int indexes[finalMapsOrExtra][2];
-    //go through our buckets and add each 'countword,' to shared memory
+    shm_addr = shmat(shm_id, NULL, 0);
+    if (!shm_addr)
+    {
+        perror("shmat: ");
+        exit(EXIT_FAILURE);
+    }
+
+    oneList = (node *)malloc(sizeof(node) * keyCount);
+    int i = 0;
+    int itterator = 0;
     for (i = 0; i < finalMapsOrExtra; ++i)
     {
-        indexes[i][0] = strlen(wordArray);
         while (buckets[i] != NULL)
         {
-            sprintf(buffer, "%d", buckets[i]->count);
-            strcat(wordArray, buffer);
-            strcat(wordArray, buckets[i]->word);
-            strcat(wordArray, ",");
-            prev = buckets[i];
+            oneList[itterator] = *buckets[i];
             buckets[i] = buckets[i]->next;
-            free(prev->word);
-            free(prev);
-            ++index;
+            *(shm_addr + itterator) = -i;
+            ++itterator;
         }
-        indexes[i][1] = strlen(wordArray);
-        // printf("%d %d\n", indexes[i][0], indexes[i][1]);
     }
 
-    //convert our ints to strings to give to the child procs
-    char shmKey[7];
-    sprintf(shmKey, "%d", keys);
-
-    int nDigits;
-
-    nDigits = (int)floor(log10(abs(keyCount))) + 1;
-    char keyStr[nDigits + 1];
-    sprintf(keyStr, "%d", keyCount);
-
-    nDigits = (int)floor(log10(abs(size))) + 1;
-    char sizeStr[nDigits + 1];
-    sprintf(sizeStr, "%d", size);
-
     pid_t pid;
-    for (i = 0; i < finalMapsOrExtra; i++)
+    for (i = 0; i < finalMapsOrExtra; ++i)
     {
-
-        //tell the child proc what indecies in the shm string they need to worry about
-        int startlength = (int)floor(log10(abs(indexes[i][0]))) + 1;
-        char *startStr = (char *)malloc(sizeof(startlength + 1));
-        sprintf(startStr, "%d", indexes[i][0]);
-        int endlength = nDigits = (int)floor(log10(abs(indexes[i][1]))) + 1;
-        char *endStr = (char *)malloc(sizeof(endlength + 1));
-        sprintf(endStr, "%d", indexes[i][1]);
-
         pid = fork();
         if (pid == 0)
         {
-            //create child procs
-            execl("processRunning", keyStr, startStr, endStr, sizeStr, shmKey, NULL);
-            printf("Could not create child process\n");
+            mapProcs(i);
             exit(EXIT_FAILURE);
         }
-        //if we couldnt create let the user know and clear the shared mem
         else if (pid == -1)
         {
             printf("Error\n");
-            shmdt((void *)wordArray);
-            shmctl(sharedMemKeys, IPC_RMID, NULL);
             exit(EXIT_FAILURE);
         }
-        // printf("%s %s %s %s \n", keyStr, startStr, endStr, sizeStr);
-        free(startStr);
-        free(endStr);
+        // printf("%d %d\n", indexes[i][0], indexes[i][1]);
     }
-    //wait for  child procsto finish
+
     for (i = 0; i < finalMapsOrExtra; ++i)
     {
         int returnStatus;
-        // Parent process waits here for child to terminate.
         waitpid(pid, &returnStatus, 0);
-        //if return is not 0 it had an error
         if (returnStatus == 1)
         {
             printf("The child process terminated with an error!.\n");
-            //clear shared mem
-            shmdt((void *)wordArray);
-            shmctl(sharedMemKeys, IPC_RMID, NULL);
             exit(EXIT_FAILURE);
         }
     }
-    //clear shared mem
-    shmdt((void *)wordArray);
-    shmctl(sharedMemKeys, IPC_RMID, NULL);
+    syncLists();
+    shmdt((void *)shm_addr);
+    shmctl(shm_id, IPC_RMID, NULL);
 }
 
 //    for (i = 0; i < keyCount; ++i)

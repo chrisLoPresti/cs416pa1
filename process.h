@@ -16,5 +16,7 @@
 #include <stdlib.h>
 
 void createSharedMemory(node **, int, int, int);
+void mapProcs(int);
+void syncLists();
 
 #endif
