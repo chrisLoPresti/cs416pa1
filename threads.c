@@ -12,7 +12,7 @@ int *reduceCountArray; // this int array is used to store how many nodes are nee
 
 void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
-    // initialize all information 
+    // initialize all information
     buckets = newBuckets;
     mapsOrThreads = newMapsOrThreads;
     reduces = newReduces; 

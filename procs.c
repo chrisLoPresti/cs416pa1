@@ -9,7 +9,7 @@ char *app;
 int *reduceCountArray;
 int key = 100;
 
-/*int startProcessing(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
+int startProcessing(node **newBuckets, int newMapsOrThreads, int newReduces, int output, char *application)
 {
     // initialize all information 
     buckets = newBuckets;
@@ -19,11 +19,25 @@ int key = 100;
     app = malloc(strlen(application) + 1);
     strcpy(app, application);
 
-	char* shm_addr = initializeSHM(sizeof(node));
+	int* signals = initializeSHM(mapsOrThreads*sizeof(int));
+    pid_t pid;
+    int bucketForProcessToHandle = -1;
+    for ( int i = 0; i < mapsOrThreads; i++ )
+    {
+        pid = fork();
+        if ( pid == 0 )
+        {
+            bucketForProcessToHandle = i;
+            break;
+        }
+    }
+
+    map((void*)buckets[i]);
+
 	return 0;
 	
 	
-}*/
+}
 
 char* initializeSHM(int alloc)
 {

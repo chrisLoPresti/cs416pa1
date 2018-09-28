@@ -189,9 +189,7 @@ int main(int argc, char **argv)
     //starting proc handling
     if (strcmp(implementation, "-procs") == 0)
     {
-        //Initialize shm_id
         startProcessing(buckets, totalMapsOrExtra, reduces, output, application);
-        
     }
     return 0;
 }
