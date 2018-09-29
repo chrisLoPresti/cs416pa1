@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <semaphore.h>
+#include <sys/wait.h>
 
 void procsDriver(node **, int, int, int, char *, int);
 void createSharedMemory();

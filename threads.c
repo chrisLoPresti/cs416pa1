@@ -205,7 +205,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     {
         reduceCountArray[i] = i;
         // not sure why you need (size_t)
-        if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *)(size_t)reduceCountArray[i]) != 0)
+        if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *)&reduceCountArray[i]) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
@@ -219,9 +219,10 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     // printf("finished reduce threading\n");
 }
 
-void *reduce(void *bucketNumber)
+void *reduce(void *num)
 {
-    node *tail = buckets[(int)bucketNumber];
+    int *bucketNumber = (int *)num;
+    node *tail = buckets[*bucketNumber];
     node *head = tail->next;
     tail->next = NULL; // changes input list from circular to linear
     node *results = NULL;
