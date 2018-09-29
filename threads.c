@@ -264,7 +264,7 @@ void finalReduce()
 {
     // printf("starting final reduce\n");
     int x;
-    for (x = 0; x < reduces; x++)
+    for (x = 0; x < reduces - 1; x++)
     {
         if (buckets[x + 1] != NULL && buckets[x] != NULL)
         {
