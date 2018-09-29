@@ -32,7 +32,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     generateHowManyNodesEachBucketWillContain();
     // printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
-    // // printBuckets();
+    // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
     // printBuckets();
     finalReduce();
@@ -256,7 +256,7 @@ void *reduce(void *num)
     }
 
     resultsPtr->next = results;
-    buckets[(int)bucketNumber] = resultsPtr;
+    buckets[*bucketNumber] = resultsPtr;
     return NULL;
 }
 
