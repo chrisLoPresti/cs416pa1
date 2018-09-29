@@ -212,7 +212,7 @@ void createReduces()
         end += end + extras + 1;
     }
 
-    for (i = 0; i < mapsNeeded; ++i)
+    for (i = 0; i < reducersNeeded; ++i)
     {
         int returnStatus;
         waitpid(pid, &returnStatus, 0);
