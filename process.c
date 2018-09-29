@@ -12,6 +12,7 @@ int mapsNeeded;
 char *app;
 int outputFile;
 
+//driver to pull in parameters and call other functions
 void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces, char *application, int output)
 {
     {
@@ -38,6 +39,7 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
     shmctl(shm_id, IPC_RMID, NULL);
 }
 
+//goes into shared memory and updates the total for each word to be 1
 void mapProcs(int i)
 {
     shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
@@ -63,6 +65,9 @@ void mapProcs(int i)
     }
 }
 
+//goes into shared memory and increments the number of times a word is present
+//if it is proceeded by words that are the same
+//words that are the same have their count set to 0
 void reduceProcs(int start, int end)
 {
     shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
@@ -102,6 +107,7 @@ void reduceProcs(int start, int end)
     }
 }
 
+//goes through shared memory and makes sure overlaps are accounted for
 void finalReducer()
 {
     int i, j;
@@ -130,6 +136,7 @@ void finalReducer()
     }
 }
 
+//creates shared memory and our array of nodes
 void createSharedMemory()
 {
     shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
@@ -161,6 +168,7 @@ void createSharedMemory()
     }
 }
 
+//function that forks to create children that map
 void createMaps()
 {
     pid_t pid;
@@ -192,6 +200,7 @@ void createMaps()
     }
 }
 
+//function that forks to create children that reduce
 void createReduces()
 {
     pid_t pid;
@@ -228,6 +237,7 @@ void createReduces()
     }
 }
 
+//go through the array and send each nodes string and count to processIndividualWrite
 void processWriteToFile()
 {
     int i;
@@ -241,6 +251,7 @@ void processWriteToFile()
     }
 }
 
+//writes each key and count to the file
 void processIndividualWrite(char *key, int count)
 {
     char buf[1000];
