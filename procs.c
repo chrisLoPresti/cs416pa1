@@ -32,7 +32,13 @@ int startProcessing(node **newBuckets, int newMapsOrThreads, int newReduces, int
         }
     }
 
-    map((void*)buckets[i]);
+    map_proc(buckets[i]);
+
+    if (bucketForProcessToHandle == -1 )
+    {
+        waitpid();
+    }
+        
 
 	return 0;
 	
@@ -62,4 +68,16 @@ char* getSHMAddr(int shm_id)
     }
 
     return shm_addr;
+}
+
+void map_proc(node *bucket)
+{
+    node *startptr = bucketData;
+    node *lastptr;
+    while (bucketData != NULL)
+    {
+        bucketData->count = 1;
+        lastptr = bucketData;
+        bucketData = bucketData->next;
+    }
 }
