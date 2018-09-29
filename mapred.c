@@ -10,6 +10,7 @@ node **buckets;
 int totalMapsOrExtra;
 int finalMapsOrExtra;
 int keyCount;
+
 //parese the input file and pull out words
 void parseInputFile()
 {

@@ -21,5 +21,5 @@ mapred: process.c threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -o mapred mapred.c process.o threads.o sort.o $(THREADSLIB) $(MATHLIB)
 
 clean:
-	rm -f threads.o sort.o mapred.o
+	rm -f process.o threads.o sort.o mapred.o
 	rm -f mapred
