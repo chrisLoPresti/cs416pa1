@@ -122,6 +122,10 @@ void finalReducer()
                 *(shm_addr + i) += *(shm_addr + j);
                 *(shm_addr + j) = 0;
             }
+            else
+            {
+                break;
+            }
         }
     }
 }
