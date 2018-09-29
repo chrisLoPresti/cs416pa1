@@ -10,7 +10,6 @@ node **buckets;
 int totalMapsOrExtra;
 int finalMapsOrExtra;
 int keyCount;
-int charCount;
 //parese the input file and pull out words
 void parseInputFile()
 {
@@ -24,7 +23,6 @@ void parseInputFile()
         {
             temp = realloc(temp, strlen(temp) + 2);
             strcat(temp, singleChar);
-            ++charCount;
             continue;
         }
         if (strlen(temp) > 0)
@@ -84,7 +82,6 @@ node *insertInput(node *pointer, char *temp)
     pointer = tempData;
     tempData->count = 0;
     ++keyCount;
-    ++charCount;
     return pointer;
 }
 
@@ -222,7 +219,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        createSharedMemory(buckets, keyCount, finalMapsOrExtra, charCount);
+        createSharedMemory(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
     }
 
     return 0;

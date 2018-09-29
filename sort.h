@@ -7,5 +7,6 @@
 #include <stdlib.h>
 
 node *sort(node *, char *);
+node *sortProcs(node *, int, char *);
 
 #endif

@@ -3,7 +3,7 @@ CFLAGS = -Wall -Werror -fsanitize=address
 THREADSLIB= -pthread
 MATHLIB = -lm
 
-all: mapred processRunning
+all: mapred 
 
 process: process.c
 	$(CC) $(CFLAGS) -o process.c
@@ -20,11 +20,6 @@ mapred: process.c threads.c sort.c mapred.c
 	$(CC) $(CFLAGS) -c sort.c
 	$(CC) $(CFLAGS) -o mapred mapred.c process.o threads.o sort.o $(THREADSLIB) $(MATHLIB)
 
-processRunning: processRunning.c
-	gcc -g -Wall -Werror -fsanitize=address processRunning.c -pthread -o processRunning
-
-
 clean:
 	rm -f threads.o sort.o mapred.o
-	rm -f mapred processRunning
-	rm -r mapred.dSYM
+	rm -f mapred

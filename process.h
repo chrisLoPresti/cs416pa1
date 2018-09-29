@@ -2,6 +2,7 @@
 #define process_h
 
 #include "structs.h"
+#include "sort.h"
 #include <math.h>
 #include <signal.h>
 #include <sys/ipc.h>
@@ -14,9 +15,13 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
-void createSharedMemory(node **, int, int, int);
+void createSharedMemory(node **, int, int, int, char *, int);
 void mapProcs(int);
-void syncLists();
+void reduceProcs(int, int);
+void finalReducer();
+void processWriteToFile();
+void processIndividualWrite(char *, int);
 
 #endif
