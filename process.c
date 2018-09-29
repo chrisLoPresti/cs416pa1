@@ -4,11 +4,39 @@ key_t key = 12345;
 int shm_id;
 int *shm_addr;
 node *oneList;
+node **bucketsPtr;
 int totalKeys;
 int keysperReduce;
 int reducersNeeded;
+int mapsNeeded;
 char *app;
 int outputFile;
+
+void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces, char *application, int output)
+{
+    {
+        outputFile = output;
+        app = application;
+        totalKeys = keyCount;
+        keysperReduce = keyCount / reduces > 0 ? keyCount / reduces : 1;
+        reducersNeeded = keysperReduce != 1 ? reduces : keyCount;
+        mapsNeeded = finalMapsOrExtra;
+        bucketsPtr = buckets;
+    }
+
+    createSharedMemory();
+
+    oneList = sortProcs(oneList, keyCount, app);
+
+    createMaps();
+    createReduces();
+    finalReducer();
+
+    processWriteToFile();
+
+    shmdt((void *)shm_addr);
+    shmctl(shm_id, IPC_RMID, NULL);
+}
 
 void mapProcs(int i)
 {
@@ -98,17 +126,9 @@ void finalReducer()
     }
 }
 
-void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int reduces, char *application, int output)
+void createSharedMemory()
 {
-    {
-        outputFile = output;
-        app = application;
-        totalKeys = keyCount;
-        keysperReduce = keyCount / reduces > 0 ? keyCount / reduces : 1;
-        reducersNeeded = keysperReduce != 1 ? reduces : keyCount;
-    }
-
-    shm_id = shmget(key, sizeof(int) * keyCount, IPC_CREAT | 0600);
+    shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
     if (!shm_id)
     {
         perror("shmget: ");
@@ -122,24 +142,26 @@ void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int 
         exit(EXIT_FAILURE);
     }
 
-    oneList = (node *)malloc(sizeof(node) * keyCount);
+    oneList = (node *)malloc(sizeof(node) * totalKeys);
     int i = 0;
     int itterator = 0;
-    for (i = 0; i < finalMapsOrExtra; ++i)
+    for (i = 0; i < mapsNeeded; ++i)
     {
-        while (buckets[i] != NULL)
+        while (bucketsPtr[i] != NULL)
         {
-            oneList[itterator] = *buckets[i];
-            buckets[i] = buckets[i]->next;
+            oneList[itterator] = *bucketsPtr[i];
+            bucketsPtr[i] = bucketsPtr[i]->next;
             *(shm_addr + itterator) = -i;
             ++itterator;
         }
     }
+}
 
-    oneList = sortProcs(oneList, keyCount, app);
-
+void createMaps()
+{
     pid_t pid;
-    for (i = 0; i < finalMapsOrExtra; ++i)
+    int i;
+    for (i = 0; i < mapsNeeded; ++i)
     {
         pid = fork();
         if (pid == 0)
@@ -154,7 +176,7 @@ void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int 
         }
     }
 
-    for (i = 0; i < finalMapsOrExtra; ++i)
+    for (i = 0; i < mapsNeeded; ++i)
     {
         int returnStatus;
         waitpid(pid, &returnStatus, 0);
@@ -164,8 +186,13 @@ void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int 
             exit(EXIT_FAILURE);
         }
     }
+}
 
-    int extras = keyCount % reducersNeeded <= 1 ? 0 : 1;
+void createReduces()
+{
+    pid_t pid;
+    int i;
+    int extras = totalKeys % reducersNeeded <= 1 ? 0 : 1;
     int start = 0;
     int end = keysperReduce + extras;
     for (i = 0; i < reducersNeeded; ++i)
@@ -185,7 +212,7 @@ void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int 
         end += end + extras + 1;
     }
 
-    for (i = 0; i < finalMapsOrExtra; ++i)
+    for (i = 0; i < mapsNeeded; ++i)
     {
         int returnStatus;
         waitpid(pid, &returnStatus, 0);
@@ -195,11 +222,6 @@ void createSharedMemory(node **buckets, int keyCount, int finalMapsOrExtra, int 
             exit(EXIT_FAILURE);
         }
     }
-
-    finalReducer();
-    processWriteToFile();
-    shmdt((void *)shm_addr);
-    shmctl(shm_id, IPC_RMID, NULL);
 }
 
 void processWriteToFile()

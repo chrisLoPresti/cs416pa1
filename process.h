@@ -17,11 +17,14 @@
 #include <stdlib.h>
 #include <semaphore.h>
 
-void createSharedMemory(node **, int, int, int, char *, int);
+void procsDriver(node **, int, int, int, char *, int);
+void createSharedMemory();
 void mapProcs(int);
 void reduceProcs(int, int);
 void finalReducer();
 void processWriteToFile();
 void processIndividualWrite(char *, int);
+void createMaps();
+void createReduces();
 
 #endif

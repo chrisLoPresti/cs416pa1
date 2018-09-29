@@ -219,7 +219,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        createSharedMemory(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
+        procsDriver(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
     }
 
     return 0;
