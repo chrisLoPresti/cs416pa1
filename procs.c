@@ -63,8 +63,3 @@ char* getSHMAddr(int shm_id)
 
     return shm_addr;
 }
-
-int mallocNodeSHM()
-{
-	
-}
