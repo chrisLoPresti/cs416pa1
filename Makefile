@@ -6,7 +6,7 @@ MATHLIB = -lm
 all: mapred 
 
 process: process.c
-	$(CC) $(CFLAGS) -o process.c
+	$(CC) $(CFLAGS) -o mm process.c
 
 threads: threads.c
 	$(CC) $(CFLAGS) -o mm threads.c $(THREADSLIB)
