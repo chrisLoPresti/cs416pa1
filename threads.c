@@ -204,7 +204,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     for (i = 0; i < reduces; i++)
     {
         reduceCountArray[i] = i;
-        // not sure why you need (size_t)
+        //passing in a void pointer that points to the address of reduceCountArray[i]
         if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *)&reduceCountArray[i]) != 0)
         {
             printf("Error creating thread\n");
@@ -221,6 +221,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
 
 void *reduce(void *num)
 {
+    //dereference that address pointer to get the int at the address
     int *bucketNumber = (int *)num;
     node *tail = buckets[*bucketNumber];
     node *head = tail->next;
