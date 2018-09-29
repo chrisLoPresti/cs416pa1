@@ -37,7 +37,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // printBuckets();
     finalReduce();
     // printBuckets();
-    writeToFile();
+    threadsWriteToFile();
 }
 
 void initializeDataLinkListMutexLock()
@@ -301,7 +301,7 @@ void moveBucketsToTheLeft(int startingBucket)
     // printf("finished shifting buckets over\n");
 }
 
-void writeToFile()
+void threadsWriteToFile()
 {
     int x;
     for (x = 0; x < reduces; x++)
@@ -315,14 +315,14 @@ void writeToFile()
 
         while (temp != buckets[x])
         {
-            processWrite(temp);
+            threadsWrite(temp);
             temp = temp->next;
         }
-        processWrite(temp);
+        threadsWrite(temp);
     }
 }
 
-void processWrite(node *temp)
+void threadsWrite(node *temp)
 {
     char buf[1000];
     if (write(outputFile, temp->word, strlen(temp->word)) < 0)

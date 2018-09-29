@@ -21,7 +21,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish();
 void generateHowManyNodesEachBucketWillContain();
 void configureBucketsToContainCorrectNumberOfNodes();
 void *map(void *);
-void writeToFile();
+void threadsWriteToFile();
 void printLinkList();
 void printReduceCountArray();
 void printBuckets();
@@ -29,5 +29,5 @@ void *reduce(void *);
 void getTotalNodes();
 void finalReduce();
 void moveBucketsToTheLeft();
-void processWrite(node *);
+void threadsWrite(node *);
 #endif

@@ -217,13 +217,16 @@ int main(int argc, char **argv)
     {
         threading_driver(buckets, finalMapsOrExtra, reduces, output, application, keyCount);
     }
+    else
+    {
+        procsDriver(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
+    }
     pthread_join(cleaner, NULL);
     return 0;
 }
 
 /* 
 this is code you can use to test to see if the buckets have information
-
     printf("(we need %d, buckets and will remove any excess)\n", finalMapsOrExtra);
     int i = 0;
     for (i = 0; i < finalMapsOrExtra; i++)

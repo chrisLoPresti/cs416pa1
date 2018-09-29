@@ -45,6 +45,32 @@ node *sort(node *head, char *app)
     return head;
 }
 
+node *sortProcs(node *array, int length, char *app)
+{
+    int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
+    int i, j;
+    for (i = 0; i < length; ++i)
+    {
+        for (j = i; j < length; ++j)
+        {
+            if (!numbers && strcmp(array[j].word, array[i].word) < 0)
+            {
+                char *tempWord = array[i].word;
+                array[i].word = array[j].word;
+                array[j].word = tempWord;
+            }
+            else if (atoi(array[j].word) < atoi(array[i].word))
+            {
+                char *tempWord = array[i].word;
+                array[i].word = array[j].word;
+                array[j].word = tempWord;
+            }
+        }
+    }
+
+    return array;
+}
+
 void testSort()
 {
     node *nodes;
