@@ -47,23 +47,23 @@ node *sort(node *head, char *app)
 
 node *myMergeSort(node *nodeArray, node *tmpArray, int totalKeys, char *app)
 {
-    msort(app, nodeArray, tmpArray, 0, totalKeys - 1);
+    myMergeSortDriver(app, nodeArray, tmpArray, 0, totalKeys - 1);
     return nodeArray;
 }
 
-void msort(char *app, node *nodeArray, node *tmpArray, int left, int right)
+void myMergeSortDriver(char *app, node *nodeArray, node *tmpArray, int left, int right)
 {
     int mid;
     if (right > left)
     {
         mid = (right + left) / 2;
-        msort(app, nodeArray, tmpArray, left, mid);
-        msort(app, nodeArray, tmpArray, mid + 1, right);
-        merge(app, nodeArray, tmpArray, left, mid + 1, right);
+        myMergeSortDriver(app, nodeArray, tmpArray, left, mid);
+        myMergeSortDriver(app, nodeArray, tmpArray, mid + 1, right);
+        myMerge(app, nodeArray, tmpArray, left, mid + 1, right);
     }
 }
 
-void merge(char *app, node *nodeArray, node *tmpArray, int left, int mid, int right)
+void myMerge(char *app, node *nodeArray, node *tmpArray, int left, int mid, int right)
 {
     int i, farLeft, count, tmpArray_pos;
     farLeft = mid - 1;
