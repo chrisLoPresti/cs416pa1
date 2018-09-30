@@ -7,8 +7,8 @@
 #include <stdlib.h>
 
 node *sort(node *, char *);
-node *myMergeSort(node *, node *, int, char *);
-void myMergeSortDriver(char *, node *, node *, int, int);
+node *myMergeSortDriver(node *, node *, int, char *);
+void myMergeSort(char *, node *, node *, int, int);
 void myMerge(char *, node *, node *, int, int, int);
 
 #endif

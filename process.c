@@ -30,7 +30,7 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
     // oneList = sortProcs(oneList, keyCount, app);
     node *temp = (node *)malloc(sizeof(node) * keyCount);
     // printf("sorting...\n");
-    oneList = myMergeSort(oneList, temp, keyCount, app);
+    oneList = myMergeSortDriver(oneList, temp, keyCount, app);
     // printf("done sorting...\n");
 
     createMaps();

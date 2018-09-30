@@ -45,20 +45,20 @@ node *sort(node *head, char *app)
     return head;
 }
 
-node *myMergeSort(node *nodeArray, node *tmpArray, int totalKeys, char *app)
+node *myMergeSortDriver(node *nodeArray, node *tmpArray, int totalKeys, char *app)
 {
-    myMergeSortDriver(app, nodeArray, tmpArray, 0, totalKeys - 1);
+    myMergeSort(app, nodeArray, tmpArray, 0, totalKeys - 1);
     return nodeArray;
 }
 
-void myMergeSortDriver(char *app, node *nodeArray, node *tmpArray, int left, int right)
+void myMergeSort(char *app, node *nodeArray, node *tmpArray, int left, int right)
 {
     int mid;
     if (right > left)
     {
         mid = (right + left) / 2;
-        myMergeSortDriver(app, nodeArray, tmpArray, left, mid);
-        myMergeSortDriver(app, nodeArray, tmpArray, mid + 1, right);
+        myMergeSort(app, nodeArray, tmpArray, left, mid);
+        myMergeSort(app, nodeArray, tmpArray, mid + 1, right);
         myMerge(app, nodeArray, tmpArray, left, mid + 1, right);
     }
 }
