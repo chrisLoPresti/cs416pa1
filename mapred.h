@@ -19,4 +19,7 @@
 node *insertInput(node *, char *);
 void parseInputFile();
 void initializeBuckets();
+int validinput(char);
+void *cleanBuckets();
+
 #endif
