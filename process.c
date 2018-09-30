@@ -29,9 +29,9 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
 
     // oneList = sortProcs(oneList, keyCount, app);
     node *temp = (node *)malloc(sizeof(node) * keyCount);
-    printf("sorting...\n");
+    // printf("sorting...\n");
     oneList = myMergeSort(oneList, temp, keyCount, app);
-    printf("done sorting...\n");
+    // printf("done sorting...\n");
 
     createMaps();
     createReduces();
@@ -96,13 +96,20 @@ void reduceProcs(int start, int end)
 
     for (i = start; i < finalEnd; ++i)
     {
+        if (*(shm_addr + i) == 0)
+        {
+            continue;
+        }
         for (j = i + 1; j < finalEnd; ++j)
         {
+            if (*(shm_addr + j) == 0)
+            {
+                continue;
+            }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
                 *(shm_addr + i) += 1;
                 *(shm_addr + j) = 0;
-                i = j - 1;
             }
             else
             {
@@ -119,13 +126,20 @@ void finalReducer()
     int i, j;
     for (i = 0; i < totalKeys; ++i)
     {
+        if (*(shm_addr + i) == 0)
+        {
+            continue;
+        }
         for (j = i + 1; j < totalKeys; ++j)
         {
+            if (*(shm_addr + j) == 0)
+            {
+                continue;
+            }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
                 *(shm_addr + i) += *(shm_addr + j);
                 *(shm_addr + j) = 0;
-                i = j - 1;
             }
             else
             {
