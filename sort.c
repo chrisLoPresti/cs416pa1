@@ -45,94 +45,67 @@ node *sort(node *head, char *app)
     return head;
 }
 
-// node *sortProcs(node *array, int length, char *app)
-// {
-//     // printf("sorting...\n");
-//     int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
-//     int i, j;
-//     for (i = 0; i < length; ++i)
-//     {
-//         for (j = i; j < length; ++j)
-//         {
-//             if (!numbers && strcmp(array[j].word, array[i].word) < 0)
-//             {
-//                 char *tempWord = array[i].word;
-//                 array[i].word = array[j].word;
-//                 array[j].word = tempWord;
-//             }
-//             else if (atoi(array[j].word) < atoi(array[i].word))
-//             {
-//                 char *tempWord = array[i].word;
-//                 array[i].word = array[j].word;
-//                 array[j].word = tempWord;
-//             }
-//         }
-//     }
-//     // printf("Done sorting...\n");
-//     return array;
-// }
-
-node *myMergeSort(node *a, node *tmp, int size, char *app)
+node *myMergeSort(node *nodeArray, node *tmpArray, int totalKeys, char *app)
 {
-    msort(app, a, tmp, 0, size - 1);
-    return a;
+    msort(app, nodeArray, tmpArray, 0, totalKeys - 1);
+    return nodeArray;
 }
 
-void msort(char *app, node *a, node *tmp, int left, int right)
+void msort(char *app, node *nodeArray, node *tmpArray, int left, int right)
 {
     int mid;
     if (right > left)
     {
         mid = (right + left) / 2;
-        msort(app, a, tmp, left, mid);
-        msort(app, a, tmp, mid + 1, right);
-        merge(app, a, tmp, left, mid + 1, right);
+        msort(app, nodeArray, tmpArray, left, mid);
+        msort(app, nodeArray, tmpArray, mid + 1, right);
+        merge(app, nodeArray, tmpArray, left, mid + 1, right);
     }
 }
 
-void merge(char *app, node *a, node *tmp, int left, int mid, int right)
+void merge(char *app, node *nodeArray, node *tmpArray, int left, int mid, int right)
 {
-    int i, left_end, count, tmp_pos;
-    left_end = mid - 1;
-    tmp_pos = left;
+    int i, farLeft, count, tmpArray_pos;
+    farLeft = mid - 1;
+    tmpArray_pos = left;
     count = right - left + 1;
 
-    while ((left <= left_end) && (mid <= right))
+    while ((left <= farLeft) && (mid <= right))
     {
-        if (strcmp(app, "-wordcount") == 0 && strcmp(a[left].word, a[mid].word) <= 0)
+        if (strcmp(app, "-wordcount") == 0 && strcmp(nodeArray[left].word, nodeArray[mid].word) <= 0)
         {
-            tmp[tmp_pos] = a[left];
-            tmp_pos = tmp_pos + 1;
+            tmpArray[tmpArray_pos] = nodeArray[left];
+            tmpArray_pos = tmpArray_pos + 1;
             left = left + 1;
         }
-        else if (strcmp(app, "-sort") == 0 && atoi(a[left].word) <= atoi(a[mid].word))
+        else if (strcmp(app, "-sort") == 0 && atoi(nodeArray[left].word) <= atoi(nodeArray[mid].word))
         {
-            tmp[tmp_pos] = a[left];
-            tmp_pos = tmp_pos + 1;
+            tmpArray[tmpArray_pos] = nodeArray[left];
+            tmpArray_pos = tmpArray_pos + 1;
             left = left + 1;
         }
         else
         {
-            tmp[tmp_pos] = a[mid];
-            tmp_pos = tmp_pos + 1;
+            tmpArray[tmpArray_pos] = nodeArray[mid];
+            tmpArray_pos = tmpArray_pos + 1;
             mid = mid + 1;
         }
     }
-    while (left <= left_end)
+    while (left <= farLeft)
     {
-        tmp[tmp_pos] = a[left];
+        tmpArray[tmpArray_pos] = nodeArray[left];
         left = left + 1;
-        tmp_pos = tmp_pos + 1;
+        tmpArray_pos = tmpArray_pos + 1;
     }
     while (mid <= right)
     {
-        tmp[tmp_pos] = a[mid];
+        tmpArray[tmpArray_pos] = nodeArray[mid];
         mid = mid + 1;
-        tmp_pos = tmp_pos + 1;
+        tmpArray_pos = tmpArray_pos + 1;
     }
     for (i = 0; i < count; i++)
     {
-        a[right] = tmp[right];
+        nodeArray[right] = tmpArray[right];
         right = right - 1;
     }
 }
