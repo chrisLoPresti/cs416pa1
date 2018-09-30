@@ -221,7 +221,7 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
 
 void *reduce(void *bucketNumber)
 {
-    node *tail = buckets[(int)bucketNumber];
+    node *tail = buckets[*(int*)bucketNumber];
     node *head = tail->next;
     tail->next = NULL; // changes input list from circular to linear
     node *results = NULL;
@@ -255,7 +255,7 @@ void *reduce(void *bucketNumber)
     }
 
     resultsPtr->next = results;
-    buckets[(int)bucketNumber] = resultsPtr;
+    buckets[*(int*)bucketNumber] = resultsPtr;
     return NULL;
 }
 
