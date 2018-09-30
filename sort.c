@@ -45,69 +45,94 @@ node *sort(node *head, char *app)
     return head;
 }
 
-node *sortProcs(node *array, int length, char *app)
-{
-    int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
-    int i, j;
-    for (i = 0; i < length; ++i)
-    {
-        for (j = i; j < length; ++j)
-        {
-            if (!numbers && strcmp(array[j].word, array[i].word) < 0)
-            {
-                char *tempWord = array[i].word;
-                array[i].word = array[j].word;
-                array[j].word = tempWord;
-            }
-            else if (atoi(array[j].word) < atoi(array[i].word))
-            {
-                char *tempWord = array[i].word;
-                array[i].word = array[j].word;
-                array[j].word = tempWord;
-            }
-        }
-    }
+// node *sortProcs(node *array, int length, char *app)
+// {
+//     // printf("sorting...\n");
+//     int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
+//     int i, j;
+//     for (i = 0; i < length; ++i)
+//     {
+//         for (j = i; j < length; ++j)
+//         {
+//             if (!numbers && strcmp(array[j].word, array[i].word) < 0)
+//             {
+//                 char *tempWord = array[i].word;
+//                 array[i].word = array[j].word;
+//                 array[j].word = tempWord;
+//             }
+//             else if (atoi(array[j].word) < atoi(array[i].word))
+//             {
+//                 char *tempWord = array[i].word;
+//                 array[i].word = array[j].word;
+//                 array[j].word = tempWord;
+//             }
+//         }
+//     }
+//     // printf("Done sorting...\n");
+//     return array;
+// }
 
-    return array;
+node *myMergeSort(node *a, node *tmp, int size, char *app)
+{
+    msort(app, a, tmp, 0, size - 1);
+    return a;
 }
 
-void testSort()
+void msort(char *app, node *a, node *tmp, int left, int right)
 {
-    node *nodes;
-    node *newNode1 = (node *)malloc(sizeof(node));
-    node *newNode2 = (node *)malloc(sizeof(node));
-    node *newNode3 = (node *)malloc(sizeof(node));
-    node *newNode4 = (node *)malloc(sizeof(node));
-    node *newNode5 = (node *)malloc(sizeof(node));
-    newNode1->word = "a";
-    newNode1->count = 1;
-
-    newNode2->word = "b";
-    newNode2->count = 2;
-    newNode3->word = "f";
-    newNode3->count = 3;
-    newNode4->word = "d";
-    newNode4->count = 4;
-    newNode5->word = "e";
-    newNode5->count = 5;
-    newNode1->next = newNode2;
-    newNode2->next = newNode3;
-    newNode3->next = newNode4;
-    newNode4->next = newNode5;
-    newNode5->next = NULL;
-    nodes = newNode1;
-    node *temp = nodes;
-    printf("printing unsorted link list: \n");
-    while (temp != NULL)
+    int mid;
+    if (right > left)
     {
-        printf("%s,%d\n", temp->word, temp->count);
-        temp = temp->next;
+        mid = (right + left) / 2;
+        msort(app, a, tmp, left, mid);
+        msort(app, a, tmp, mid + 1, right);
+        merge(app, a, tmp, left, mid + 1, right);
     }
-    node *head = sort(nodes, "-sort");
-    printf("Printing sorted link list: \n");
-    while (head != NULL)
+}
+
+void merge(char *app, node *a, node *tmp, int left, int mid, int right)
+{
+    int i, left_end, count, tmp_pos;
+    left_end = mid - 1;
+    tmp_pos = left;
+    count = right - left + 1;
+
+    while ((left <= left_end) && (mid <= right))
     {
-        printf("%s,%d\n", head->word, head->count);
-        head = head->next;
+        if (strcmp(app, "-wordcount") == 0 && strcmp(a[left].word, a[mid].word) <= 0)
+        {
+            tmp[tmp_pos] = a[left];
+            tmp_pos = tmp_pos + 1;
+            left = left + 1;
+        }
+        else if (strcmp(app, "-sort") == 0 && atoi(a[left].word) <= atoi(a[mid].word))
+        {
+            tmp[tmp_pos] = a[left];
+            tmp_pos = tmp_pos + 1;
+            left = left + 1;
+        }
+        else
+        {
+            tmp[tmp_pos] = a[mid];
+            tmp_pos = tmp_pos + 1;
+            mid = mid + 1;
+        }
+    }
+    while (left <= left_end)
+    {
+        tmp[tmp_pos] = a[left];
+        left = left + 1;
+        tmp_pos = tmp_pos + 1;
+    }
+    while (mid <= right)
+    {
+        tmp[tmp_pos] = a[mid];
+        mid = mid + 1;
+        tmp_pos = tmp_pos + 1;
+    }
+    for (i = 0; i < count; i++)
+    {
+        a[right] = tmp[right];
+        right = right - 1;
     }
 }

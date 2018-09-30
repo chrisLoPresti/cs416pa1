@@ -8,5 +8,8 @@
 
 node *sort(node *, char *);
 node *sortProcs(node *, int, char *);
+node *myMergeSort(node *, node *, int, char *);
+void msort(char *, node *, node *, int, int);
+void merge(char *, node *, node *, int, int, int);
 
 #endif

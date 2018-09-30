@@ -27,11 +27,19 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
 
     createSharedMemory();
 
-    oneList = sortProcs(oneList, keyCount, app);
+    // oneList = sortProcs(oneList, keyCount, app);
+    node *temp = (node *)malloc(sizeof(node) * keyCount);
+    printf("sorting...\n");
+    oneList = myMergeSort(oneList, temp, keyCount, app);
+    printf("done sorting...\n");
 
     createMaps();
-    createReduces();
-    finalReducer();
+    // createReduces();
+    // if (reducersNeeded != 1)
+    // {
+    //     // printf("HERE!\n");
+    //     finalReducer();
+    // }
 
     processWriteToFile();
 
@@ -70,6 +78,7 @@ void mapProcs(int i)
 //words that are the same have their count set to 0
 void reduceProcs(int start, int end)
 {
+
     shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
     if (!shm_id)
     {
@@ -92,6 +101,8 @@ void reduceProcs(int start, int end)
         {
             continue;
         }
+        // printf("reducing %s\n", oneList[i].word);
+
         for (j = i + 1; j < finalEnd; ++j)
         {
             if (*(shm_addr + j) == 0)
@@ -100,6 +111,8 @@ void reduceProcs(int start, int end)
             }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
+                // printf("MATCH %s\n", oneList[j].word);
+                // printf("reducing %s\n", oneList[i].word);
                 *(shm_addr + i) += 1;
                 *(shm_addr + j) = 0;
             }
@@ -125,6 +138,7 @@ void finalReducer()
             }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
+
                 *(shm_addr + i) += *(shm_addr + j);
                 *(shm_addr + j) = 0;
             }
@@ -192,6 +206,7 @@ void createMaps()
     {
         int returnStatus;
         waitpid(pid[i], &returnStatus, 0);
+        // printf("The child process %d finished.\n", pid[i]);
         if (returnStatus == 1)
         {
             printf("The child process terminated with an error!.\n");
@@ -229,8 +244,10 @@ void createReduces()
     {
         int returnStatus;
         waitpid(pid[i], &returnStatus, 0);
+        // printf("The child process %d finished.\n", pid[i]);
         if (returnStatus == 1)
         {
+            printf("The child process %d finished.\n", pid[i]);
             printf("The child process terminated with an error!.\n");
             exit(EXIT_FAILURE);
         }
