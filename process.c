@@ -171,17 +171,17 @@ void createSharedMemory()
 //function that forks to create children that map
 void createMaps()
 {
-    pid_t pid;
+    pid_t pid[mapsNeeded];
     int i;
     for (i = 0; i < mapsNeeded; ++i)
     {
-        pid = fork();
-        if (pid == 0)
+        pid[i] = fork();
+        if (pid[i] == 0)
         {
             mapProcs(i);
             exit(EXIT_FAILURE);
         }
-        else if (pid == -1)
+        else if (pid[i] == -1)
         {
             printf("Error\n");
             exit(EXIT_FAILURE);
@@ -191,7 +191,7 @@ void createMaps()
     for (i = 0; i < mapsNeeded; ++i)
     {
         int returnStatus;
-        waitpid(pid, &returnStatus, 0);
+        waitpid(pid[i], &returnStatus, 0);
         if (returnStatus == 1)
         {
             printf("The child process terminated with an error!.\n");
@@ -203,20 +203,20 @@ void createMaps()
 //function that forks to create children that reduce
 void createReduces()
 {
-    pid_t pid;
+    pid_t pid[reducersNeeded];
     int i;
     int extras = totalKeys % reducersNeeded <= 1 ? 0 : 1;
     int start = 0;
     int end = keysperReduce + extras;
     for (i = 0; i < reducersNeeded; ++i)
     {
-        pid = fork();
-        if (pid == 0)
+        pid[i] = fork();
+        if (pid[i] == 0)
         {
             reduceProcs(start, end);
             exit(EXIT_FAILURE);
         }
-        else if (pid == -1)
+        else if (pid[i] == -1)
         {
             printf("Error\n");
             exit(EXIT_FAILURE);
@@ -228,7 +228,7 @@ void createReduces()
     for (i = 0; i < reducersNeeded; ++i)
     {
         int returnStatus;
-        waitpid(pid, &returnStatus, 0);
+        waitpid(pid[i], &returnStatus, 0);
         if (returnStatus == 1)
         {
             printf("The child process terminated with an error!.\n");
