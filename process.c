@@ -34,12 +34,12 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
     printf("done sorting...\n");
 
     createMaps();
-    // createReduces();
-    // if (reducersNeeded != 1)
-    // {
-    //     // printf("HERE!\n");
-    //     finalReducer();
-    // }
+    createReduces();
+    if (reducersNeeded != 1)
+    {
+        // printf("HERE!\n");
+        finalReducer();
+    }
 
     processWriteToFile();
 
@@ -97,24 +97,17 @@ void reduceProcs(int start, int end)
 
     for (i = start; i < finalEnd; ++i)
     {
-        if (*(shm_addr + i) == 0)
-        {
-            continue;
-        }
-        // printf("reducing %s\n", oneList[i].word);
-
         for (j = i + 1; j < finalEnd; ++j)
         {
-            if (*(shm_addr + j) == 0)
-            {
-                continue;
-            }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
-                // printf("MATCH %s\n", oneList[j].word);
-                // printf("reducing %s\n", oneList[i].word);
                 *(shm_addr + i) += 1;
                 *(shm_addr + j) = 0;
+            }
+            else
+            {
+                i = j - 1;
+                break;
             }
         }
     }
@@ -126,16 +119,16 @@ void finalReducer()
     int i, j;
     for (i = 0; i < totalKeys; ++i)
     {
-        if (*(shm_addr + i) == 0)
-        {
-            continue;
-        }
+        // if (*(shm_addr + i) == 0)
+        // {
+        //     continue;
+        // }
         for (j = i + 1; j < totalKeys; ++j)
         {
-            if (*(shm_addr + j) == 0)
-            {
-                continue;
-            }
+            // if (*(shm_addr + j) == 0)
+            // {
+            //     continue;
+            // }
             if (strcmp(oneList[i].word, oneList[j].word) == 0)
             {
 
@@ -144,6 +137,7 @@ void finalReducer()
             }
             else
             {
+                i = j - 1;
                 break;
             }
         }
