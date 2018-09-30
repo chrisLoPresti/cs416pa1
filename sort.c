@@ -8,41 +8,53 @@
 
 */
 
-node *sort(node *head, char *app)
+node **array;
+int totalNodes = 0;
+node *headOfLinkList;
+
+void mergeSort(node** array,int low,int high)
 {
-    node *current;
-    node *ptr;
-    int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
-    for (current = head; current != NULL; current = current->next)
+    int mid;
+    if(low < high)
     {
-        for (ptr = head; ptr != NULL; ptr = ptr->next)
-        {
-            if (!numbers && strcmp(ptr->word, current->word) > 0)
-            {
-                int count = current->count;
-                char *tempWord = current->word;
-
-                current->count = ptr->count;
-                current->word = ptr->word;
-
-                ptr->count = count;
-                ptr->word = tempWord;
-            }
-            else if (atoi(ptr->word) > atoi(current->word))
-            {
-                int count = current->count;
-                char *tempWord = current->word;
-
-                current->count = ptr->count;
-                current->word = ptr->word;
-
-                ptr->count = count;
-                ptr->word = tempWord;
-            }
-        }
+        mid=(low+high)/2;
+        mergeSort(array,low,mid);
+        mergeSort(array,mid+1,high);
+        //merge(array,low,mid,high);
     }
+}
 
-    return head;
+
+
+void convertLinkListToArrayStructure()
+{
+    array = malloc(totalNodes * sizeof(node) + 1);
+    array[totalNodes] = NULL;
+    int x;
+    for (x = 0; x < totalNodes; x++)
+    {
+        array[x] = headOfLinkList;
+        node *tmp = headOfLinkList;
+        headOfLinkList = headOfLinkList->next;
+        tmp->next = NULL;
+    }
+}
+
+node *sort(node *head, char *app, int total_nodes)
+{
+    totalNodes = total_nodes;
+    headOfLinkList = head;
+    
+    
+    convertLinkListToArrayStructure();
+
+    int x;
+    for (x = 0; x < total_nodes; x++)
+    {
+        printf("%s,%d\n", array[x]->word, array[x]->count);
+    }
+    return NULL;
+
 }
 
 node *sortProcs(node *array, int length, char *app)
@@ -97,13 +109,17 @@ void testSort()
     newNode5->next = NULL;
     nodes = newNode1;
     node *temp = nodes;
-    printf("printing unsorted link list: \n");
-    while (temp != NULL)
-    {
-        printf("%s,%d\n", temp->word, temp->count);
-        temp = temp->next;
-    }
-    node *head = sort(nodes, "-sort");
+    // printf("printing unsorted link list: \n");
+    // while (temp != NULL)
+    // {
+    //     printf("%s,%d\n", temp->word, temp->count);
+    //     temp = temp->next;
+    // }
+
+
+    node *head = sort(nodes, "-sort", 5);
+
+
     printf("Printing sorted link list: \n");
     while (head != NULL)
     {
@@ -111,3 +127,46 @@ void testSort()
         head = head->next;
     }
 }
+int main()
+{
+    testSort();
+    return 1;
+}
+
+
+
+
+
+   // node *current;
+    // node *ptr;
+    // int numbers = strcmp(app, "-sort") == 0 ? 1 : 0;
+    // for (current = head; current != NULL; current = current->next)
+    // {
+    //     for (ptr = head; ptr != NULL; ptr = ptr->next)
+    //     {
+    //         if (!numbers && strcmp(ptr->word, current->word) > 0)
+    //         {
+    //             int count = current->count;
+    //             char *tempWord = current->word;
+
+    //             current->count = ptr->count;
+    //             current->word = ptr->word;
+
+    //             ptr->count = count;
+    //             ptr->word = tempWord;
+    //         }
+    //         else if (atoi(ptr->word) > atoi(current->word))
+    //         {
+    //             int count = current->count;
+    //             char *tempWord = current->word;
+
+    //             current->count = ptr->count;
+    //             current->word = ptr->word;
+
+    //             ptr->count = count;
+    //             ptr->word = tempWord;
+    //         }
+    //     }
+    // }
+
+    // return head;
