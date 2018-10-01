@@ -27,11 +27,8 @@ void procsDriver(node **buckets, int keyCount, int finalMapsOrExtra, int reduces
 
     createSharedMemory();
 
-    // oneList = sortProcs(oneList, keyCount, app);
     node *temp = (node *)malloc(sizeof(node) * keyCount);
-    // printf("sorting...\n");
-    oneList = myMergeSortDriver(oneList, temp, keyCount, app);
-    // printf("done sorting...\n");
+    oneList = myMergeSortDriverProcs(oneList, temp, keyCount, app);
 
     createMaps();
     createReduces();
@@ -193,7 +190,7 @@ void createMaps()
         if (pid[i] == 0)
         {
             mapProcs(i);
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         }
         else if (pid[i] == -1)
         {
@@ -229,7 +226,7 @@ void createReduces()
         if (pid[i] == 0)
         {
             reduceProcs(start, end);
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         }
         else if (pid[i] == -1)
         {
@@ -271,27 +268,47 @@ void processWriteToFile()
 //writes each key and count to the file
 void processIndividualWrite(char *key, int count)
 {
-    char buf[1000];
-    if (write(outputFile, key, strlen(key)) < 0)
+    if (strcmp(app, "-sort") == 0)
     {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
+        int i;
+        for (i = 0; i < count; ++i)
+        {
+            if (write(outputFile, key, strlen(key)) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+            if (write(outputFile, "\n", 1) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+        }
     }
+    else
+    {
+        char buf[1000];
+        if (write(outputFile, key, strlen(key)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
 
-    if (write(outputFile, " ", 1) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
-    }
-    sprintf(buf, "%d", count);
-    if (write(outputFile, buf, strlen(buf)) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
-    }
-    if (write(outputFile, "\n", 1) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
+        if (write(outputFile, " ", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        sprintf(buf, "%d", count);
+        if (write(outputFile, buf, strlen(buf)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        if (write(outputFile, "\n", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
     }
 }
