@@ -14,6 +14,7 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
 {
     // initialize all information
     {
+        dataLinkList = NULL;
         buckets = newBuckets;
         mapsOrThreads = newMapsOrThreads;
         reduces = newReduces;
@@ -27,12 +28,12 @@ void threading_driver(node **newBuckets, int newMapsOrThreads, int newReduces, i
     // create threads and run mapping function
     produceThreadMapsAndWaitTillAllThreadsFinish();
     // sort data
-    dataLinkList = sort(dataLinkList, app);
+    myMergeSortDriverThreads(&dataLinkList, app);
     // printLinkList();
     generateHowManyNodesEachBucketWillContain();
     // printReduceCountArray();
     configureBucketsToContainCorrectNumberOfNodes();
-    // // printBuckets();
+    // printBuckets();
     produceReduceThreadsAndWaitTillAllThreadsFinish();
     // printBuckets();
     finalReduce();
@@ -204,8 +205,8 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     for (i = 0; i < reduces; i++)
     {
         reduceCountArray[i] = i;
-        // not sure why you need (size_t)
-        if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *)(size_t)reduceCountArray[i]) != 0)
+        //passing in a void pointer that points to the address of reduceCountArray[i]
+        if (buckets[i] && pthread_create(&reduceThread[i], NULL, reduce, (void *)&reduceCountArray[i]) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
@@ -219,9 +220,11 @@ void produceReduceThreadsAndWaitTillAllThreadsFinish()
     // printf("finished reduce threading\n");
 }
 
-void *reduce(void *bucketNumber)
+void *reduce(void *num)
 {
-    node *tail = buckets[(int)bucketNumber];
+    //dereference that address pointer to get the int at the address
+    int *bucketNumber = (int *)num;
+    node *tail = buckets[*bucketNumber];
     node *head = tail->next;
     tail->next = NULL; // changes input list from circular to linear
     node *results = NULL;
@@ -255,7 +258,7 @@ void *reduce(void *bucketNumber)
     }
 
     resultsPtr->next = results;
-    buckets[(int)bucketNumber] = resultsPtr;
+    buckets[*bucketNumber] = resultsPtr;
     return NULL;
 }
 
@@ -263,7 +266,7 @@ void finalReduce()
 {
     // printf("starting final reduce\n");
     int x;
-    for (x = 0; x < reduces; x++)
+    for (x = 0; x < reduces - 1; x++)
     {
         if (buckets[x + 1] != NULL && buckets[x] != NULL)
         {
@@ -324,27 +327,47 @@ void writeToFile()
 
 void processWrite(node *temp)
 {
-    char buf[1000];
-    if (write(outputFile, temp->word, strlen(temp->word)) < 0)
+    if (strcmp(app, "-sort") == 0)
     {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
+        int i;
+        for (i = 0; i < temp->count; ++i)
+        {
+            if (write(outputFile, temp->word, strlen(temp->word)) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+            if (write(outputFile, "\n", 1) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+        }
     }
+    else
+    {
+        char buf[1000];
+        if (write(outputFile, temp->word, strlen(temp->word)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
 
-    if (write(outputFile, " ", 1) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
-    }
-    sprintf(buf, "%d", temp->count);
-    if (write(outputFile, buf, strlen(buf)) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
-    }
-    if (write(outputFile, "\n", 1) < 0)
-    {
-        printf("Error writing to the file\n");
-        exit(EXIT_FAILURE);
+        if (write(outputFile, " ", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        sprintf(buf, "%d", temp->count);
+        if (write(outputFile, buf, strlen(buf)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        if (write(outputFile, "\n", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
     }
 }

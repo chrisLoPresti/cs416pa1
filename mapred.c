@@ -206,18 +206,23 @@ int main(int argc, char **argv)
     parseInputFile();
     //create a thread to clean the buckets we did not use
 
-    pthread_t cleaner;
-    if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
-    {
-        printf("Error creating thread\n");
-        exit(EXIT_FAILURE);
-    }
-
     if (strcmp(implementation, "-threads") == 0)
     {
         threading_driver(buckets, finalMapsOrExtra, reduces, output, application, keyCount);
+
+        pthread_t cleaner;
+        if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
+        {
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
+        }
+        pthread_join(cleaner, NULL);
     }
-    pthread_join(cleaner, NULL);
+    else
+    {
+        procsDriver(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
+    }
+
     return 0;
 }
 
