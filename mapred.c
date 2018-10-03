@@ -192,6 +192,10 @@ int main(int argc, char **argv)
             printf("You entered an invalid --num_threads value of <=0 or some form of characters.\n Please use the form -[num]\n");
             exit(EXIT_FAILURE);
         }
+        initializeBuckets();
+        parseInputFile();
+
+        nonMapReduceDriver(buckets, numThreads, output, application);
     }
     //if the input stream is invalid let them know
     else
