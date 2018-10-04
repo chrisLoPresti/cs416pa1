@@ -16,7 +16,9 @@ int keyCount;
 void parseInputFile()
 {
     char *temp = (char *)calloc(1, 1);
+    temp[0] = '\0';
     char *singleChar = (char *)calloc(2, 1);
+    singleChar[1] = '\0';
 
     while (read(input, &singleChar[0], 1) != 0)
     {
@@ -28,6 +30,7 @@ void parseInputFile()
         }
         if (strlen(temp) > 0)
         {
+
             char *p;
             for (p = temp; *p; ++p)
                 *p = tolower(*p);
@@ -35,9 +38,10 @@ void parseInputFile()
             buckets = insertInput(buckets, temp);
             free(temp);
             temp = (char *)calloc(1, 1);
+            temp[0] = '\0';
         }
     }
-    if (strlen(temp) > 0)
+    if (strcmp(temp, "—") != 0 && strlen(temp) > 0)
     {
         char *p;
         for (p = temp; *p; ++p)
@@ -99,7 +103,6 @@ void generateArray()
     while (buckets != NULL)
     {
         arrayOfWords[i] = *buckets;
-        // printf("(%s,%d)\n", arrayOfWords[i].word, arrayOfWords[i].count);
         buckets = buckets->next;
         ++i;
     }

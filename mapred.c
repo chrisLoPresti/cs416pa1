@@ -13,10 +13,9 @@ int keysperReduce;
 //how many reducer threads or procs we actually need (lets say you asked for too many, we make it so we give you an ammount that makes sense)
 int reducersNeeded;
 //same concept applies for how many mapping threads or procs you requested
-int mapsNeeded; //how many keys we will hand to each reducers
+int mapsNeeded;
+//how many keys we will hand to each generator
 int keysperMap;
-//how many keys we will hand to each reducers
-int keysperReduce;
 // -wordcount or -sort
 char *app;
 // -procs or -threads
@@ -43,6 +42,7 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
         keysperMap = keyCount / mapsNeeded > 0 ? keyCount / mapsNeeded : 1;
         impl = implementtion;
     }
+
     //create POSIX shared memory
     createSharedMemory();
     //this determines whether or not we use threads or procs depending on implementation (impl)
@@ -94,11 +94,11 @@ void generateKeysProcs()
     if (extras && extras - 1 >= 0)
     {
         --extras;
-        end += keysperReduce + 1;
+        end += keysperMap + 1;
     }
     else
     {
-        end += keysperReduce;
+        end += keysperMap;
     }
     pid_t pid[mapsNeeded];
     int i;
@@ -111,25 +111,27 @@ void generateKeysProcs()
         pid[i] = fork();
         if (pid[i] == 0)
         {
-            generateKeyPair((void *)info);
+            // generateKeyPair((void *)info);
             exit(EXIT_SUCCESS);
         }
-        else if (pid[i] == -1)
+        else if (pid[i] < 0)
         {
             printf("Error\n");
             exit(EXIT_FAILURE);
         }
-
-        if (extras && extras - 1 >= 0)
-        {
-            --extras;
-            start = end;
-            end += keysperReduce + 1;
-        }
         else
         {
-            start = end;
-            end += keysperReduce;
+            if (extras)
+            {
+                --extras;
+                start += keysperMap + 1;
+                end += keysperMap + 1;
+            }
+            else
+            {
+                start = end;
+                end += keysperMap;
+            }
         }
     }
 
@@ -157,11 +159,11 @@ void generateKeysThreads()
     if (extras && extras - 1 >= 0)
     {
         --extras;
-        end += keysperReduce + 1;
+        end += keysperMap + 1;
     }
     else
     {
-        end += keysperReduce;
+        end += keysperMap;
     }
     for (i = 0; i < mapsNeeded; ++i)
     {
@@ -173,17 +175,16 @@ void generateKeysThreads()
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
         }
-        start += keysperReduce + extras + 1;
-        if (extras && extras - 1 >= 0)
+        if (extras)
         {
             --extras;
-            start = end;
-            end += keysperReduce + 1;
+            start += keysperMap + 1;
+            end += keysperMap + 1;
         }
         else
         {
             start = end;
-            end += keysperReduce;
+            end += keysperMap;
         }
     }
 
@@ -442,9 +443,13 @@ void processWriteToFile()
     {
         if (*(shm_addr + i) == 0)
         {
+            // processIndividualWrite(oneList[i].word, 0);
             continue;
         }
-        processIndividualWrite(oneList[i].word, *(shm_addr + i));
+        else
+        {
+            processIndividualWrite(oneList[i].word, *(shm_addr + i));
+        }
         free(oneList[i].word);
     }
     free(oneList);
