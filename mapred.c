@@ -59,11 +59,6 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
     oneList = myMergeSortDriver(oneList, temp, keyCount, app);
     //call reducer which will create threads or procs to perform reducing actions
     reducer();
-    //perform a final reduce only if we requested more then 1 reducer
-    if (reducersNeeded != 1)
-    {
-        finalReducer();
-    }
     //write output to file
     processWriteToFile();
     //de-attached from shared name and clear it
@@ -241,6 +236,11 @@ void reducer()
     else if (strcmp(impl, "-threads") == 0)
     {
         generateReducersThreads();
+    }
+    //perform a final reduce only if we requested more then 1 reducer
+    if (reducersNeeded != 1)
+    {
+        finalReducer();
     }
 }
 
