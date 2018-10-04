@@ -88,7 +88,7 @@ void createSharedMemory()
 void generateKeysProcs()
 {
     //we will create forks that will go to our shared memory, where they will set the associated words count to 1
-    int extras = totalKeys % mapsNeeded <= 1 ? 0 : totalKeys % mapsNeeded;
+    int extras = totalKeys % mapsNeeded;
     int start = 0;
     int end = 0;
     if (extras && extras - 1 >= 0)
@@ -111,7 +111,7 @@ void generateKeysProcs()
         pid[i] = fork();
         if (pid[i] == 0)
         {
-            // generateKeyPair((void *)info);
+            generateKeyPair((void *)info);
             exit(EXIT_SUCCESS);
         }
         else if (pid[i] < 0)
@@ -153,7 +153,7 @@ void generateKeysThreads()
     //we will create threads that will go to our shared memory, where they will set the associated words count to 1
     pthread_t pThread[mapsNeeded];
     int i;
-    int extras = totalKeys % mapsNeeded <= 1 ? 0 : totalKeys % mapsNeeded;
+    int extras = totalKeys % mapsNeeded;
     int start = 0;
     int end = 0;
     if (extras && extras - 1 >= 0)
@@ -250,7 +250,7 @@ void generateReducersProcs()
 {
     pid_t pid[reducersNeeded];
     int i;
-    int extras = totalKeys % reducersNeeded <= 1 ? 0 : totalKeys % reducersNeeded;
+    int extras = totalKeys % reducersNeeded;
     int start = 0;
     int end = 0;
     if (extras && extras - 1 >= 0)
@@ -312,7 +312,7 @@ void generateReducersThreads()
 {
     pthread_t pThread[reducersNeeded];
     int i;
-    int extras = totalKeys % reducersNeeded <= 1 ? 0 : totalKeys % reducersNeeded;
+    int extras = totalKeys % reducersNeeded;
     int start = 0;
     int end = 0;
     if (extras && extras - 1 >= 0)
@@ -379,7 +379,7 @@ void *reduceCombined(void *x)
         }
     }
     int j, i;
-    int finalEnd = end > totalKeys ? totalKeys : end;
+    int finalEnd = end >= totalKeys ? totalKeys : end;
 
     for (i = start; i < finalEnd; ++i)
     {
@@ -446,7 +446,6 @@ void processWriteToFile()
     {
         if (*(shm_addr + i) == 0)
         {
-            // processIndividualWrite(oneList[i].word, 0);
             continue;
         }
         else

@@ -28,7 +28,7 @@ void parseInputFile()
             strcat(temp, singleChar);
             continue;
         }
-        if (strlen(temp) > 0)
+        if (strlen(temp) > 0 && validword(temp))
         {
 
             char *p;
@@ -36,6 +36,12 @@ void parseInputFile()
                 *p = tolower(*p);
             //add the words to our bucekts
             buckets = insertInput(buckets, temp);
+            free(temp);
+            temp = (char *)calloc(1, 1);
+            temp[0] = '\0';
+        }
+        else
+        {
             free(temp);
             temp = (char *)calloc(1, 1);
             temp[0] = '\0';
@@ -62,6 +68,18 @@ void parseInputFile()
 int validinput(char character)
 {
     if (character != ' ' && character != '\n' && character != '\t' && character != '\r' && character != '\0' && character != 0 && character != '.' && character != ',' && character != ';' && character != '!' && character != '-')
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int validword(char *temp)
+{
+    if (strcmp(temp, " ") != 0 && strcmp(temp, "\n") != 0 && strcmp(temp, "\t") != 0 && strcmp(temp, "\r") != 0 && strcmp(temp, "\0") != 0 && strcmp(temp, "'") != 0 && strcmp(temp, ".") != 0 && strcmp(temp, ",") != 0 && strcmp(temp, ";") != 0 && strcmp(temp, "!") != 0 && strcmp(temp, "-") != 0 && strcmp(temp, "—") != 0)
     {
         return 1;
     }

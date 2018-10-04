@@ -15,6 +15,7 @@
 node *insertInput(node *, char *);
 void parseInputFile();
 int validinput(char);
+int validword(char *);
 void generateArray();
 
 #endif
