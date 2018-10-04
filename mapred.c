@@ -411,29 +411,19 @@ void *reduceCombined(void *x)
 //goes through shared memory and makes sure overlaps are accounted for
 void finalReducer()
 {
-    int i, j;
-    for (i = 0; i < totalKeys; ++i)
+    int i;
+    for (i = 0; i < totalKeys - 1; ++i)
     {
-        if (*(shm_addr + i) == 0)
+        if (strcmp(oneList[i].word, oneList[i + *(shm_addr + i)].word) == 0)
         {
-            continue;
+            int x = *(shm_addr + i);
+            *(shm_addr + i) += *(shm_addr + i + x);
+            *(shm_addr + i + x) = 0;
+            --i;
         }
-        for (j = i + 1; j < totalKeys; ++j)
+        else
         {
-            if (*(shm_addr + j) == 0)
-            {
-                continue;
-            }
-            if (strcmp(oneList[i].word, oneList[j].word) == 0)
-            {
-                *(shm_addr + i) += *(shm_addr + j);
-                *(shm_addr + j) = 0;
-            }
-            else
-            {
-                i = j - 1;
-                break;
-            }
+            i += *(shm_addr + i) - 1;
         }
     }
 }
