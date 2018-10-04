@@ -5,21 +5,17 @@ MATHLIB = -lm
 
 all: mapred 
 
-process: process.c
-	$(CC) $(CFLAGS) -o mm process.c
-
-threads: threads.c
-	$(CC) $(CFLAGS) -o mm threads.c $(THREADSLIB)
+driver: driver.c
+	$(CC) $(CFLAGS) -o mm driver.c
 
 sort: sort.c
 	$(CC) $(CFLAGS) -o mm sort.c
 
-mapred: process.c threads.c sort.c mapred.c
-	$(CC) $(CFLAGS) -c process.c
-	$(CC) $(CFLAGS) -c threads.c $(THREADSLIB)
+mapred: driver.c sort.c mapred.c 
+	$(CC) $(CFLAGS) -c driver.c
 	$(CC) $(CFLAGS) -c sort.c
-	$(CC) $(CFLAGS) -o mapred mapred.c process.o threads.o sort.o $(THREADSLIB) $(MATHLIB)
+	$(CC) $(CFLAGS) -o mapred mapred.c driver.o sort.o $(THREADSLIB) $(MATHLIB)
 
 clean:
-	rm -f process.o threads.o sort.o mapred.o
+	rm -f driver.o sort.o mapred.o
 	rm -f mapred

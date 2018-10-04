@@ -1,242 +1,500 @@
 #include "mapred.h"
-char *application;
-char *implementation;
-int numThreads;
-int reduces;
-int maps;
-int input;
-int output;
-node **buckets;
-int totalMapsOrExtra;
-int finalMapsOrExtra;
-int keyCount;
+//key variable to access POSIX shared memory
+key_t key = 12345;
+//id and pointer to point to POSIX memory
+int shm_id;
+int *shm_addr;
+//list if our keys (array of nodes)
+node *oneList;
+//how many keys we have in our array
+int totalKeys;
+//how many keys we will hand to each reducers
+int keysperReduce;
+//how many reducer threads or procs we actually need (lets say you asked for too many, we make it so we give you an ammount that makes sense)
+int reducersNeeded;
+//same concept applies for how many mapping threads or procs you requested
+int mapsNeeded; //how many keys we will hand to each reducers
+int keysperMap;
+//how many keys we will hand to each reducers
+int keysperReduce;
+// -wordcount or -sort
+char *app;
+// -procs or -threads
+char *impl;
+//our file to write to
+int outputFile;
 
-//parese the input file and pull out words
-void parseInputFile()
+//mapper is called from the driver.c file
+//can not name it map because map is a reserved function name for c
+//mapp takes in arguements and creates threads or procs to generate key pairs
+//once key pairs are assigned, we sort the oneList of data
+//from here we call the reducer, had to name it reducer because reduce is a reserved function name in c
+void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char *application, int output, char *implementtion)
 {
-    char *temp = (char *)calloc(1, 1);
-    char *singleChar = (char *)calloc(2, 1);
+    //assign global variables
+    {
+        oneList = buckets;
+        outputFile = output;
+        app = application;
+        totalKeys = keyCount;
+        keysperReduce = keyCount / reduces > 0 ? keyCount / reduces : 1;
+        reducersNeeded = keysperReduce != 1 ? reduces : keyCount;
+        mapsNeeded = finalMapsOrExtra;
+        keysperMap = keyCount / mapsNeeded > 0 ? keyCount / mapsNeeded : 1;
+        impl = implementtion;
+    }
+    //create POSIX shared memory
+    createSharedMemory();
+    //this determines whether or not we use threads or procs depending on implementation (impl)
+    if (strcmp(impl, "-procs") == 0)
+    {
+        generateKeysProcs();
+    }
+    else if (strcmp(impl, "-threads") == 0)
+    {
+        generateKeysThreads();
+    }
 
-    int itterator = 0;
-    while (read(input, &singleChar[0], 1) != 0)
+    node *temp = (node *)malloc(sizeof(node) * keyCount);
+    oneList = myMergeSortDriver(oneList, temp, keyCount, app);
+    //call reducer which will create threads or procs to perform reducing actions
+    reducer();
+    //perform a final reduce only if we requested more then 1 reducer
+    if (reducersNeeded != 1)
     {
-        if (validinput(singleChar[0]))
-        {
-            temp = realloc(temp, strlen(temp) + 2);
-            strcat(temp, singleChar);
-            continue;
-        }
-        if (strlen(temp) > 0)
-        {
-            char *p;
-            for (p = temp; *p; ++p)
-                *p = tolower(*p);
-            //add the words to our bucekts
-            buckets[itterator] = insertInput(buckets[itterator], temp);
-            free(temp);
-            temp = (char *)calloc(1, 1);
-            ++itterator;
-            if (itterator == totalMapsOrExtra)
-            {
-                itterator = 0;
-            }
-        }
+        finalReducer();
     }
-    if (strlen(temp) > 0)
-    {
-        char *p;
-        for (p = temp; *p; ++p)
-            *p = tolower(*p);
-        buckets[itterator] = insertInput(buckets[itterator], temp);
-    }
-    if (buckets[0] == NULL)
-    {
-        printf("The input file was empty, or there was an error reading from it\n");
-        exit(EXIT_FAILURE);
-    }
-    finalMapsOrExtra = keyCount < totalMapsOrExtra ? itterator + 1 : totalMapsOrExtra;
-    free(temp);
-    close(input);
+    //write output to file
+    processWriteToFile();
+    //de-attached from shared name and clear it
+    shmdt((void *)shm_addr);
+    shmctl(shm_id, IPC_RMID, NULL);
 }
 
-//checks to make sure the character is not a delimiter
-int validinput(char character)
+//creates shared memory array of indecies corresponding to our data
+void createSharedMemory()
 {
-    if (character != ' ' && character != '\n' && character != '\t' && character != '\r' && character != '\0' && character != 0 && character != '.' && character != ',' && character != ';' && character != '!' && character != '-')
+    shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
+    if (!shm_id)
     {
-        return 1;
+        perror("shmget: ");
+        exit(EXIT_FAILURE);
+    }
+
+    shm_addr = shmat(shm_id, NULL, 0);
+    if (!shm_addr)
+    {
+        perror("shmat: ");
+        exit(EXIT_FAILURE);
+    }
+}
+
+//function that forks to create children that create key pair associations
+void generateKeysProcs()
+{
+    //we will create forks that will go to our shared memory, where they will set the associated words count to 1
+    int extras = totalKeys % mapsNeeded <= 1 ? 0 : totalKeys % mapsNeeded;
+    int start = 0;
+    int end = 0;
+    if (extras && extras - 1 >= 0)
+    {
+        --extras;
+        end += keysperReduce + 1;
     }
     else
     {
-        return 0;
+        end += keysperReduce;
     }
-}
-
-//adds a full word to our buckets
-node *insertInput(node *pointer, char *temp)
-{
-    node *tempData = (node *)malloc(sizeof(node));
-    tempData->word = (char *)malloc(sizeof(char) * strlen(temp) + 1);
-    strcpy(tempData->word, temp);
-    tempData->word[strlen(tempData->word)] = '\0';
-    tempData->next = pointer;
-    pointer = tempData;
-    tempData->count = 0;
-    ++keyCount;
-    return pointer;
-}
-
-//creates our buckets based off of the number of requested maps
-void initializeBuckets()
-{
-    totalMapsOrExtra = maps ? maps : numThreads;
-
-    buckets = (node **)malloc(sizeof(node *) * totalMapsOrExtra);
+    pid_t pid[mapsNeeded];
     int i;
-    for (i = 0; i < totalMapsOrExtra; ++i)
+
+    for (i = 0; i < mapsNeeded; ++i)
     {
-        buckets[i] = malloc(sizeof(node));
-        buckets[i] = NULL;
+        int *info = malloc(8);
+        info[0] = 0 + start;
+        info[1] = 0 + end;
+        pid[i] = fork();
+        if (pid[i] == 0)
+        {
+            generateKeyPair((void *)info);
+            exit(EXIT_SUCCESS);
+        }
+        else if (pid[i] == -1)
+        {
+            printf("Error\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (extras && extras - 1 >= 0)
+        {
+            --extras;
+            start = end;
+            end += keysperReduce + 1;
+        }
+        else
+        {
+            start = end;
+            end += keysperReduce;
+        }
+    }
+
+    for (i = 0; i < mapsNeeded; ++i)
+    {
+        int returnStatus;
+        waitpid(pid[i], &returnStatus, 0);
+        if (returnStatus == 1)
+        {
+            printf("The child process terminated with an error!.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
-//removes any buckets that were not used
-void *cleanBuckets()
+//function that threads to create children that create key pair associations
+void generateKeysThreads()
 {
+    //we will create threads that will go to our shared memory, where they will set the associated words count to 1
+    pthread_t pThread[mapsNeeded];
     int i;
-    for (i = finalMapsOrExtra; i < totalMapsOrExtra; ++i)
+    int extras = totalKeys % mapsNeeded <= 1 ? 0 : totalKeys % mapsNeeded;
+    int start = 0;
+    int end = 0;
+    if (extras && extras - 1 >= 0)
     {
-        free(buckets[i]);
+        --extras;
+        end += keysperReduce + 1;
     }
-    return NULL;
-}
-
-//drives the program
-int main(int argc, char **argv)
-{
-    // if we do not have 6 or 7 inputs we can not continue
-    if (argc != 7 && argc != 6)
-    {
-        printf("Please make sure to have 6 or 7 inputs\n 7: ./mapred –-app [-wordcount, -sort] –-impl [-procs, -threads] --maps -[num_maps] –-reduces -[num_reduces] --input [-infile] –-output [-outfile]\n  6: ./mapred –-app [-wordcount, -sort] –-impl [-extra] --numthreads -[num] --input [-infile] –-output [-outfile]\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //before doing anything lets check if these files names exist/ are taken
-    input = argc == 7 ? open(++argv[5], O_RDONLY) : open(++argv[4], O_RDONLY);
-    //if we couldn"t open the file let the user know it doesnt exist
-    if (input < 0)
-    {
-        close(input);
-        printf("We were unable to open your input file. Please check to make sure that file exists, or confirm the spelling.\n Please use the form -[file name]\n");
-        exit(EXIT_FAILURE);
-    }
-    //lets create the output file
-    output = argc == 7 ? open(++argv[6], O_RDWR | O_CREAT, 0777) : open(++argv[5], O_RDWR | O_CREAT, 0777);
-    //if we could not create the file let them know and exit(EXIT_FAILURE)
-    if (output < 0)
-    {
-        printf("We were unable to open your output file. Either there was an error creating it, or it already exists and we do not have permission to open it.\n Please use the form -[file name]\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //get the application type (wordcount or sort)
-    application = (char *)(malloc(sizeof(char) * strlen(argv[1]) + 1));
-    strcpy(application, argv[1]);
-    application[strlen(application)] = '\0';
-    //make sure the application type is valid
-    if (strcmp(application, "-wordcount") != 0 && strcmp(application, "-sort") != 0)
-    {
-        printf("You entered an invalid --app.\nValid options=>\n-wordcount\n-sort\nPlease try again with a valid option.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //get the implementation method(procs, threads, extra)
-    implementation = (char *)(malloc(sizeof(char) * strlen(argv[2]) + 1));
-    strcpy(implementation, argv[2]);
-    implementation[strlen(implementation)] = '\0';
-    //make sure the implementation type is valid
-    if (strcmp(implementation, "-procs") != 0 && strcmp(implementation, "-threads") != 0 && strcmp(implementation, "-extra") != 0)
-    {
-        printf("You entered an invalid --impl.\nValid options=>\n-procs\n-threads\n-extra\nPlease try again with a valid option.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //validate to make sure we have the correct input amount matching our implementation
-    if (argc == 7 && (strcmp(implementation, "-procs") == 0 || strcmp(implementation, "-threads") == 0))
-    {
-        //lets get the number of maps
-        maps = atoi(++argv[3]);
-        //make sure it is a valid number
-        if (maps <= 0)
-        {
-            printf("You entered an invalid --maps value of <=0 or some form of characters.\n Please use the form -[num]\n");
-            exit(EXIT_FAILURE);
-        }
-
-        //lets get the number of reduces
-        reduces = atoi(++argv[4]);
-        //make sure it is a valid number
-        if (reduces <= 0)
-        {
-            printf("You entered an invalid --numReduces value of <=0 or some form of characters.\n Please use the form -[num]\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    else if (argc == 6 && strcmp(implementation, "-extra") == 0)
-    {
-        // lets get the number of threads
-        numThreads = atoi(++argv[3]);
-        //make sure it is a valid number
-        if (numThreads <= 0)
-        {
-            printf("You entered an invalid --num_threads value of <=0 or some form of characters.\n Please use the form -[num]\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    //if the input stream is invalid let them know
     else
     {
-        printf("Please make sure to have 6 or 7 inputs\n 7: ./mapred –-app [-wordcount, -sort] –-impl [-procs, -threads] --maps -[num_maps] –-reduces -[num_reduces] --input [-infile] –-output [-outfile]\n  6: ./mapred –-app [-wordcount, -sort] –-impl [-extra] --numthreads -[num] --input [-infile] –-output [-outfile]\n");
-        exit(EXIT_FAILURE);
+        end += keysperReduce;
     }
-
-    //create our buckets
-    initializeBuckets();
-    //read the input file and fill the buckets
-    parseInputFile();
-    //create a thread to clean the buckets we did not use
-
-    if (strcmp(implementation, "-threads") == 0)
+    for (i = 0; i < mapsNeeded; ++i)
     {
-        threading_driver(buckets, finalMapsOrExtra, reduces, output, application, keyCount);
-
-        pthread_t cleaner;
-        if (pthread_create(&cleaner, NULL, cleanBuckets, NULL) != 0)
+        int *info = malloc(8);
+        info[0] = 0 + start;
+        info[1] = 0 + end;
+        if (pthread_create(&pThread[i], NULL, generateKeyPair, (void *)info) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
         }
-        pthread_join(cleaner, NULL);
+        start += keysperReduce + extras + 1;
+        if (extras && extras - 1 >= 0)
+        {
+            --extras;
+            start = end;
+            end += keysperReduce + 1;
+        }
+        else
+        {
+            start = end;
+            end += keysperReduce;
+        }
+    }
+
+    for (i = 0; i < mapsNeeded; i++)
+    {
+        pthread_join(pThread[i], NULL);
+    }
+}
+
+//goes into shared memory and updates the total for each word to be 1
+void *generateKeyPair(void *info)
+{
+    //we have an index array in shared memory corresponding to the indecies of our data
+    //this allows us to use minimal shared memory while still keeping track of ourdata safely amongst processes and threads
+    int start = ((int *)info)[0];
+    int end = ((int *)info)[1];
+    int finalEnd = end > totalKeys ? totalKeys : end;
+
+    if (strcmp(impl, "-procs") == 0)
+    {
+        shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
+        if (!shm_id)
+        {
+            perror("shmget: ");
+            exit(EXIT_FAILURE);
+        }
+
+        shm_addr = shmat(shm_id, NULL, 0);
+        if (!shm_addr)
+        {
+            perror("shmat: ");
+            exit(EXIT_FAILURE);
+        }
+    }
+    int c;
+    for (c = start; c < finalEnd; ++c)
+    {
+        *(shm_addr + c) = 1;
+    }
+    return NULL;
+}
+
+//function that forks to create children that reduce
+void reducer()
+{
+    if (strcmp(impl, "-procs") == 0)
+    {
+        generateReducersProcs();
+    }
+    else if (strcmp(impl, "-threads") == 0)
+    {
+        generateReducersThreads();
+    }
+}
+
+//will create x number of processes to reduce a chunck of data
+void generateReducersProcs()
+{
+    pid_t pid[reducersNeeded];
+    int i;
+    int extras = totalKeys % reducersNeeded <= 1 ? 0 : totalKeys % reducersNeeded;
+    int start = 0;
+    int end = 0;
+    if (extras && extras - 1 >= 0)
+    {
+        --extras;
+        end += keysperReduce + 1;
     }
     else
     {
-        procsDriver(buckets, keyCount, finalMapsOrExtra, reduces, application, output);
+        end += keysperReduce;
     }
-
-    return 0;
-}
-
-/* 
-this is code you can use to test to see if the buckets have information
-
-    printf("(we need %d, buckets and will remove any excess)\n", finalMapsOrExtra);
-    int i = 0;
-    for (i = 0; i < finalMapsOrExtra; i++)
+    for (i = 0; i < reducersNeeded; ++i)
     {
-        while (buckets[i] != NULL)
+        pid[i] = fork();
+        if (pid[i] == 0)
         {
-            printf("(%s,%d)\n", buckets[i]->word, buckets[i]->count);
-            buckets[i] = buckets[i]->next;
+            int *x = malloc(8);
+            x[0] = 0 + start;
+            x[1] = 0 + end;
+            reduceCombined((void *)x);
+            exit(EXIT_SUCCESS);
+        }
+        else if (pid[i] == -1)
+        {
+            printf("Error\n");
+            exit(EXIT_FAILURE);
+        }
+        if (extras && extras - 1 >= 0)
+        {
+            --extras;
+            start = end;
+            end += keysperReduce + 1;
+        }
+        else
+        {
+            start = end;
+            end += keysperReduce;
         }
     }
-    */
+
+    for (i = 0; i < reducersNeeded; ++i)
+    {
+        int returnStatus;
+        waitpid(pid[i], &returnStatus, 0);
+        if (returnStatus == 1)
+        {
+            printf("The child process %d finished.\n", pid[i]);
+            printf("The child process terminated with an error!.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+//will create x number of threads to reduce a chunck of data
+void generateReducersThreads()
+{
+    pthread_t pThread[reducersNeeded];
+    int i;
+    int extras = totalKeys % reducersNeeded <= 1 ? 0 : totalKeys % reducersNeeded;
+    int start = 0;
+    int end = 0;
+    if (extras && extras - 1 != 0)
+    {
+        --extras;
+        end += keysperReduce + 1;
+    }
+    else
+    {
+        end += keysperReduce;
+    }
+    for (i = 0; i < reducersNeeded; ++i)
+    {
+        int *x = malloc(8);
+        x[0] = 0 + start;
+        x[1] = 0 + end;
+        if (pthread_create(&pThread[i], NULL, reduceCombined, (void *)x) != 0)
+        {
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
+        }
+        if (extras && extras - 1 != -1)
+        {
+            --extras;
+            start = end;
+            end += keysperReduce + 1;
+        }
+        else
+        {
+            start = end;
+            end += keysperReduce;
+        }
+    }
+
+    for (i = 0; i < reducersNeeded; i++)
+    {
+        pthread_join(pThread[i], NULL);
+    }
+}
+
+//goes into shared memory and increments the number of times a word is present
+//if it is proceeded by words that are the same
+//words that are the same have their count set to 0
+void *reduceCombined(void *x)
+{
+
+    int start = ((int *)x)[0];
+    int end = ((int *)x)[1];
+
+    if (strcmp(app, "-procs") == 0)
+    {
+        shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
+        if (!shm_id)
+        {
+            perror("shmget: ");
+            exit(EXIT_FAILURE);
+        }
+
+        shm_addr = shmat(shm_id, NULL, 0);
+        if (!shm_addr)
+        {
+            perror("shmat: ");
+            exit(EXIT_FAILURE);
+        }
+    }
+    int j, i;
+    int finalEnd = end > totalKeys ? totalKeys : end;
+
+    for (i = start; i < finalEnd; ++i)
+    {
+        if (*(shm_addr + i) == 0)
+        {
+            continue;
+        }
+        for (j = i + 1; j < finalEnd; ++j)
+        {
+            if (*(shm_addr + j) == 0)
+            {
+                continue;
+            }
+            if (strcmp(oneList[i].word, oneList[j].word) == 0)
+            {
+                *(shm_addr + i) += 1;
+                *(shm_addr + j) = 0;
+            }
+            else
+            {
+                i = j - 1;
+                break;
+            }
+        }
+    }
+    return NULL;
+}
+
+//goes through shared memory and makes sure overlaps are accounted for
+void finalReducer()
+{
+    int i, j;
+    for (i = 0; i < totalKeys; ++i)
+    {
+        if (*(shm_addr + i) == 0)
+        {
+            continue;
+        }
+        for (j = i + 1; j < totalKeys; ++j)
+        {
+            if (*(shm_addr + j) == 0)
+            {
+                continue;
+            }
+            if (strcmp(oneList[i].word, oneList[j].word) == 0)
+            {
+                *(shm_addr + i) += *(shm_addr + j);
+                *(shm_addr + j) = 0;
+            }
+            else
+            {
+                i = j - 1;
+                break;
+            }
+        }
+    }
+}
+
+//go through the array and send each nodes string and count to processIndividualWrite
+void processWriteToFile()
+{
+    int i;
+    for (i = 0; i < totalKeys; ++i)
+    {
+        if (*(shm_addr + i) == 0)
+        {
+            continue;
+        }
+        processIndividualWrite(oneList[i].word, *(shm_addr + i));
+        free(oneList[i].word);
+    }
+    free(oneList);
+    close(outputFile);
+}
+
+//writes each key and count to the file
+void processIndividualWrite(char *key, int count)
+{
+    if (strcmp(app, "-sort") == 0)
+    {
+        int i;
+        for (i = 0; i < count; ++i)
+        {
+            if (write(outputFile, key, strlen(key)) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+            if (write(outputFile, "\n", 1) < 0)
+            {
+                printf("Error writing to the file\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    else
+    {
+        char buf[1000];
+        if (write(outputFile, key, strlen(key)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (write(outputFile, " ", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        sprintf(buf, "%d", count);
+        if (write(outputFile, buf, strlen(buf)) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+        if (write(outputFile, "\n", 1) < 0)
+        {
+            printf("Error writing to the file\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
