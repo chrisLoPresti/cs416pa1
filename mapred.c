@@ -278,16 +278,19 @@ void generateReducersProcs()
             printf("Error\n");
             exit(EXIT_FAILURE);
         }
-        if (extras && extras - 1 >= 0)
-        {
-            --extras;
-            start = end;
-            end += keysperReduce + 1;
-        }
         else
         {
-            start = end;
-            end += keysperReduce;
+            if (extras)
+            {
+                --extras;
+                start += keysperReduce + 1;
+                end += keysperReduce + 1;
+            }
+            else
+            {
+                start = end;
+                end += keysperReduce;
+            }
         }
     }
 
@@ -312,7 +315,7 @@ void generateReducersThreads()
     int extras = totalKeys % reducersNeeded <= 1 ? 0 : totalKeys % reducersNeeded;
     int start = 0;
     int end = 0;
-    if (extras && extras - 1 != 0)
+    if (extras && extras - 1 >= 0)
     {
         --extras;
         end += keysperReduce + 1;
@@ -331,10 +334,10 @@ void generateReducersThreads()
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
         }
-        if (extras && extras - 1 != -1)
+        if (extras)
         {
             --extras;
-            start = end;
+            start += keysperReduce + 1;
             end += keysperReduce + 1;
         }
         else
