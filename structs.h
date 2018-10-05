@@ -4,7 +4,6 @@
 struct node
 {
     char *word;
-    int count;
     struct node *next;
 
 } typedef node;
