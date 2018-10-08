@@ -522,7 +522,7 @@ treeNode *insertIntoTree(treeNode *ptr, char *word)
 
     while (ptr != NULL)
     {
-        if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) != 0 && atoi(word) != 0)
+        if (strcmp(app, "-wordcount") == 0 && (atoi(ptr->word) != 0 || strcmp(ptr->word, "0") == 0) && (atoi(word) != 0 || strcmp(word, "0") == 0))
         {
             if (atoi(ptr->word) == atoi(word))
             {
@@ -544,14 +544,14 @@ treeNode *insertIntoTree(treeNode *ptr, char *word)
                 continue;
             }
         }
-        else if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) != 0 && atoi(word) == 0)
+        else if (strcmp(app, "-wordcount") == 0 && (atoi(ptr->word) != 0 || strcmp(ptr->word, "0") == 0) && atoi(word) == 0)
         {
             lastNode = ptr;
             ptr = ptr->left;
             smaller = 0;
             continue;
         }
-        else if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) == 0 && atoi(word) != 0)
+        else if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) == 0 && (atoi(word) != 0 || strcmp(word, "0") == 0))
         {
             lastNode = ptr;
             ptr = ptr->right;
