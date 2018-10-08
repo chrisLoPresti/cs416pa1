@@ -28,7 +28,34 @@ void myMerge(char *app, node *nodeArray, node *tmpArray, int left, int mid, int 
 
     while ((left <= farLeft) && (mid <= right))
     {
-        if (strcmp(app, "-wordcount") == 0 && strcmp(nodeArray[left].word, nodeArray[mid].word) <= 0)
+        if (strcmp(app, "-wordcount") == 0 && (atoi(nodeArray[left].word) != 0 || strcmp(nodeArray[left].word, "0") == 0) && (atoi(nodeArray[mid].word) != 0 || strcmp(nodeArray[mid].word, "0") == 0))
+        {
+            if (atoi(nodeArray[left].word) <= atoi(nodeArray[mid].word))
+            {
+                tmpArray[tmpArray_pos] = nodeArray[left];
+                tmpArray_pos = tmpArray_pos + 1;
+                left = left + 1;
+            }
+            else if (atoi(nodeArray[left].word) > atoi(nodeArray[mid].word))
+            {
+                tmpArray[tmpArray_pos] = nodeArray[mid];
+                tmpArray_pos = tmpArray_pos + 1;
+                mid = mid + 1;
+            }
+        }
+        else if (strcmp(app, "-wordcount") == 0 && (atoi(nodeArray[left].word) != 0 || strcmp(nodeArray[left].word, "0") == 0) && atoi(nodeArray[mid].word) == 0)
+        {
+            tmpArray[tmpArray_pos] = nodeArray[left];
+            tmpArray_pos = tmpArray_pos + 1;
+            left = left + 1;
+        }
+        else if (strcmp(app, "-wordcount") == 0 && atoi(nodeArray[left].word) == 0 && (atoi(nodeArray[mid].word) != 0 || strcmp(nodeArray[mid].word, "0") == 0))
+        {
+            tmpArray[tmpArray_pos] = nodeArray[mid];
+            tmpArray_pos = tmpArray_pos + 1;
+            mid = mid + 1;
+        }
+        else if (strcmp(app, "-wordcount") == 0 && strcmp(nodeArray[left].word, nodeArray[mid].word) <= 0)
         {
             tmpArray[tmpArray_pos] = nodeArray[left];
             tmpArray_pos = tmpArray_pos + 1;
