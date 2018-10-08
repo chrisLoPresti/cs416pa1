@@ -4,6 +4,7 @@
 #include "structs.h"
 #include "threads.h"
 #include "process.h"
+#include "non_mapreduce.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

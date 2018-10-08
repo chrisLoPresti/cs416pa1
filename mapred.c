@@ -196,6 +196,7 @@ int main(int argc, char **argv)
         parseInputFile();
 
         nonMapReduceDriver(buckets, numThreads, output, application);
+        return 0;
     }
     //if the input stream is invalid let them know
     else

@@ -25,23 +25,23 @@ void nonMapReduceDriver(node **newBuckets, int numOfThreads, int fileToWrite, ch
     nullAllBucketsPointers();
 
     // sort link list
-    dataLinkList = sort(dataLinkList, app);
+    myMergeSortDriverThreads(&dataLinkList, app);
 
     // get total node in the link list
     getTotalNodesForNonMapReduce();
 
     // generate how many node will go in to each bucket 
     generateHowManyNodesEachBucketWillContainForNonMapReduce();
-
+   
     // configure buckets to contain the correct amount of nodes
     configureBucketsToContainCorrectNumberOfNodesForNonMapReduce();
-
+    
     // start mapping and reducing
     produceNonMapReduceThreadsAndWaitTillAllThreadsFinish();
-    
+   
     // combine all adjoining nodes that match 
     finalReduceForNonMapReduce();
-
+    
     // print results to file
     passBucketToWriteToFileForNonMapReduce();
     return;
