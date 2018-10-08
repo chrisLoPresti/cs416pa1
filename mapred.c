@@ -45,7 +45,6 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
         keysperMap = keyCount / mapsNeeded > 0 ? keyCount / mapsNeeded : 1;
         impl = implementtion;
     }
-    printf("total: %d\n", totalKeys);
     //this determines whether or not we use threads or procs depending on implementation (impl)
     if (strcmp(impl, "-procs") == 0)
     {
