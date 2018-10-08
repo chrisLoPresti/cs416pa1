@@ -22,6 +22,9 @@ char *app;
 char *impl;
 //our file to write to
 int outputFile;
+//for rextra credit
+treeNode *extraTree;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 //mapper is called from the driver.c file
 //can not name it map because map is a reserved function name for c
@@ -42,7 +45,7 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
         keysperMap = keyCount / mapsNeeded > 0 ? keyCount / mapsNeeded : 1;
         impl = implementtion;
     }
-
+    printf("total: %d\n", totalKeys);
     //this determines whether or not we use threads or procs depending on implementation (impl)
     if (strcmp(impl, "-procs") == 0)
     {
@@ -58,16 +61,9 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
     }
     else if (strcmp(impl, "-extra") == 0)
     {
-        node *temp = (node *)malloc(sizeof(node) * keyCount);
-        oneList = myMergeSortDriver(oneList, temp, keyCount, app);
-        //create POSIX shared memory with the number of threads
-        //shared memory is used to keep track of which threads have permission to write
-        createSharedMemory(mapsNeeded);
-        //write output to file using threads
+        extraTree = NULL;
         generateExtraThreads();
-        //clear shared memory
-        shmdt((void *)shm_addr);
-        shmctl(shm_id, IPC_RMID, NULL);
+        printAndFree(extraTree);
         return;
     }
 
@@ -369,6 +365,7 @@ void generateReducersThreads()
     }
 }
 
+//exrea credit thread implementation creates a binary tree which sorts and reduces as it inserts
 void generateExtraThreads()
 {
     pthread_t pThread[mapsNeeded];
@@ -376,7 +373,6 @@ void generateExtraThreads()
     int extras = totalKeys % mapsNeeded;
     int start = 0;
     int end = 0;
-    *(shm_addr) = 1;
     if (extras && extras - 1 >= 0)
     {
         --extras;
@@ -388,13 +384,11 @@ void generateExtraThreads()
     }
     for (i = 0; i < mapsNeeded; ++i)
     {
-        int *x = malloc(12);
-        int index = i;
+        int *x = malloc(8);
         x[0] = 0 + start;
         x[1] = 0 + end;
-        x[2] = index;
 
-        if (pthread_create(&pThread[i], NULL, processWriteToFileExtra, (void *)x) != 0)
+        if (pthread_create(&pThread[i], NULL, createTree, (void *)x) != 0)
         {
             printf("Error creating thread\n");
             exit(EXIT_FAILURE);
@@ -479,12 +473,12 @@ void finalReducer()
     int i;
     for (i = 0; i < totalKeys - 1; ++i)
     {
-        if (strcmp(oneList[i].word, oneList[i + *(shm_addr + i)].word) == 0)
+        int indexOfSecondWord = i + *(shm_addr + i) <= totalKeys - 1 ? i + *(shm_addr + i) : totalKeys - 1;
+        if (strcmp(oneList[i].word, oneList[indexOfSecondWord].word) == 0)
         {
-            int x = *(shm_addr + i);
-            *(shm_addr + i) += *(shm_addr + i + x);
-            *(shm_addr + i + x) = 0;
-            --i;
+            int countOfI = *(shm_addr + i);
+            *(shm_addr + indexOfSecondWord) += countOfI;
+            *(shm_addr + i) = 0;
         }
         else
         {
@@ -494,39 +488,169 @@ void finalReducer()
 }
 
 //writes to the file, but splits the work up into different threads
-void *processWriteToFileExtra(void *info)
+void *createTree(void *info)
 {
     int start = ((int *)info)[0];
     int end = ((int *)info)[1];
-    int index = ((int *)info)[2];
-
-    //wait until we have permission to write and then start writing
-    while (!*(shm_addr + index))
-    {
-        continue;
-    }
-
     int i;
-    int count = 1;
     for (i = start; i < end; ++i)
     {
-        //if we have the same word increment the count
-        if (i + 1 < totalKeys && strcmp(oneList[i].word, oneList[i + 1].word) == 0)
-        {
-            ++count;
-            free(oneList[i].word);
-            continue;
-        }
-        processIndividualWrite(oneList[i].word, count);
-        count = 1;
-    }
-    if (index + 1 < mapsNeeded)
-    {
-        *(shm_addr + index + 1) = 1;
+        pthread_mutex_lock(&lock);
+        extraTree = insertIntoTree(extraTree, oneList[i].word);
+        free(oneList[i].word);
+        pthread_mutex_unlock(&lock);
     }
     return NULL;
 }
 
+//for extra credit inserts a word int the tree without recursion...so it takes some time
+treeNode *insertIntoTree(treeNode *ptr, char *word)
+{
+
+    if (ptr == NULL)
+    {
+        ptr = (treeNode *)malloc(sizeof(treeNode));
+        ptr->word = (char *)malloc(sizeof(char) * strlen(word) + 1);
+        strcpy(ptr->word, word);
+        ptr->count = 1;
+        ptr->left = ptr->right = NULL;
+        return ptr;
+    }
+    treeNode *placeHolder = ptr;
+    treeNode *lastNode = ptr;
+    int smaller = 0;
+
+    while (ptr != NULL)
+    {
+        if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) != 0 && atoi(word) != 0)
+        {
+            if (atoi(ptr->word) == atoi(word))
+            {
+                ptr->count += 1;
+                break;
+            }
+            else if (atoi(ptr->word) < atoi(word))
+            {
+                lastNode = ptr;
+                ptr = ptr->left;
+                smaller = 0;
+                continue;
+            }
+            else if (atoi(ptr->word) > atoi(word))
+            {
+                lastNode = ptr;
+                ptr = ptr->right;
+                smaller = 1;
+                continue;
+            }
+        }
+        else if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) != 0 && atoi(word) == 0)
+        {
+            lastNode = ptr;
+            ptr = ptr->left;
+            smaller = 0;
+            continue;
+        }
+        else if (strcmp(app, "-wordcount") == 0 && atoi(ptr->word) == 0 && atoi(word) != 0)
+        {
+            lastNode = ptr;
+            ptr = ptr->right;
+            smaller = 1;
+            continue;
+        }
+        else if (strcmp(app, "-wordcount") == 0 && strcmp(ptr->word, word) == 0)
+        {
+            ptr->count += 1;
+            break;
+        }
+        else if (strcmp(app, "-wordcount") == 0 && strcmp(ptr->word, word) < 0)
+        {
+            lastNode = ptr;
+            ptr = ptr->left;
+            smaller = 0;
+            continue;
+        }
+        else if (strcmp(app, "-sort") == 0 && atoi(ptr->word) == atoi(word))
+        {
+            ptr->count += 1;
+            break;
+        }
+        else if (strcmp(app, "-sort") == 0 && atoi(ptr->word) < atoi(word))
+        {
+            lastNode = ptr;
+            ptr = ptr->left;
+            smaller = 0;
+            continue;
+        }
+        else
+        {
+            lastNode = ptr;
+            ptr = ptr->right;
+            smaller = 1;
+            continue;
+        }
+    }
+
+    if (ptr == NULL && smaller)
+    {
+        lastNode->right = (treeNode *)malloc(sizeof(treeNode));
+        lastNode->right->word = (char *)malloc(sizeof(char) * strlen(word) + 1);
+        strcpy(lastNode->right->word, word);
+        lastNode->right->count = 1;
+        lastNode->right->left = lastNode->right->right = NULL;
+    }
+    else if (ptr == NULL && !smaller)
+    {
+        lastNode->left = (treeNode *)malloc(sizeof(treeNode));
+        lastNode->left->word = (char *)malloc(sizeof(char) * strlen(word) + 1);
+        strcpy(lastNode->left->word, word);
+        lastNode->left->count = 1;
+        lastNode->left->left = lastNode->left->right = NULL;
+    }
+    placeHolder = placeHolder != NULL ? placeHolder : ptr;
+    return placeHolder;
+}
+
+//for extra credit: sends a word to be written to the file then frees it
+void printAndFree(treeNode *extraTree)
+{
+
+    struct treeNode *current, *pre;
+
+    if (extraTree == NULL)
+        return;
+
+    current = extraTree;
+    while (current != NULL)
+    {
+
+        if (current->right == NULL)
+        {
+            processIndividualWrite(current->word, current->count);
+            free(current->word);
+            current = current->left;
+        }
+        else
+        {
+            pre = current->right;
+            while (pre->left != NULL && pre->left != current)
+                pre = pre->left;
+
+            if (pre->left == NULL)
+            {
+                pre->left = current;
+                current = current->right;
+            }
+            else
+            {
+                pre->left = NULL;
+                processIndividualWrite(current->word, current->count);
+                free(current->word);
+                current = current->left;
+            }
+        }
+    }
+}
 //go through the array and send each nodes string and count to processIndividualWrite
 void processWriteToFile()
 {

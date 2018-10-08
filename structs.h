@@ -8,4 +8,13 @@ struct node
 
 } typedef node;
 
+struct treeNode
+{
+    char *word;
+    int count;
+    struct treeNode *left;
+    struct treeNode *right;
+
+} typedef treeNode;
+
 #endif

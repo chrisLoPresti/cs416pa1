@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 //mapper is whats called from our main file to map our input
 void mapper(node *, int, int, int, char *, int, char *);
@@ -38,6 +39,8 @@ void processWriteToFile();
 void processIndividualWrite(char *, int);
 //extra
 void generateExtraThreads();
-void *processWriteToFileExtra(void *);
+void *createTree(void *);
+treeNode *insertIntoTree(treeNode *, char *);
+void printAndFree(treeNode *);
 
 #endif
