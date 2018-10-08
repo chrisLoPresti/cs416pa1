@@ -224,6 +224,7 @@ int main(int argc, char **argv)
     //turn linked list into array
     generateArray();
     //call mapper
+    reduces = reduces ? reduces : 1;
     mapper(arrayOfWords, keyCount, finalMapsOrExtra, reduces, application, output, implementation);
     return 0;
 }

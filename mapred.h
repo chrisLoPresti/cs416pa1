@@ -22,7 +22,7 @@
 //mapper is whats called from our main file to map our input
 void mapper(node *, int, int, int, char *, int, char *);
 //called from mapper to set up posix mem
-void createSharedMemory();
+void createSharedMemory(int);
 //functions called in mapper to create key pairs associated by index
 void generateKeysProcs();
 void generateKeysThreads();
@@ -36,5 +36,8 @@ void finalReducer();
 //write output to file
 void processWriteToFile();
 void processIndividualWrite(char *, int);
+//extra
+void generateExtraThreads();
+void *processWriteToFileExtra(void *);
 
 #endif

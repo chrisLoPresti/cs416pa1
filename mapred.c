@@ -43,16 +43,32 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
         impl = implementtion;
     }
 
-    //create POSIX shared memory
-    createSharedMemory();
     //this determines whether or not we use threads or procs depending on implementation (impl)
     if (strcmp(impl, "-procs") == 0)
     {
+        //create POSIX shared memory
+        createSharedMemory(totalKeys);
         generateKeysProcs();
     }
     else if (strcmp(impl, "-threads") == 0)
     {
+        //create POSIX shared memory
+        createSharedMemory(totalKeys);
         generateKeysThreads();
+    }
+    else if (strcmp(impl, "-extra") == 0)
+    {
+        node *temp = (node *)malloc(sizeof(node) * keyCount);
+        oneList = myMergeSortDriver(oneList, temp, keyCount, app);
+        //create POSIX shared memory with the number of threads
+        //shared memory is used to keep track of which threads have permission to write
+        createSharedMemory(mapsNeeded);
+        //write output to file using threads
+        generateExtraThreads();
+        //clear shared memory
+        shmdt((void *)shm_addr);
+        shmctl(shm_id, IPC_RMID, NULL);
+        return;
     }
 
     node *temp = (node *)malloc(sizeof(node) * keyCount);
@@ -67,9 +83,9 @@ void mapper(node *buckets, int keyCount, int finalMapsOrExtra, int reduces, char
 }
 
 //creates shared memory array of indecies corresponding to our data
-void createSharedMemory()
+void createSharedMemory(int size)
 {
-    shm_id = shmget(key, sizeof(int) * totalKeys, IPC_CREAT | 0600);
+    shm_id = shmget(key, sizeof(int) * size, IPC_CREAT | 0600);
     if (!shm_id)
     {
         perror("shmget: ");
@@ -353,6 +369,55 @@ void generateReducersThreads()
     }
 }
 
+void generateExtraThreads()
+{
+    pthread_t pThread[mapsNeeded];
+    int i;
+    int extras = totalKeys % mapsNeeded;
+    int start = 0;
+    int end = 0;
+    *(shm_addr) = 1;
+    if (extras && extras - 1 >= 0)
+    {
+        --extras;
+        end += keysperMap + 1;
+    }
+    else
+    {
+        end += keysperMap;
+    }
+    for (i = 0; i < mapsNeeded; ++i)
+    {
+        int *x = malloc(12);
+        int index = i;
+        x[0] = 0 + start;
+        x[1] = 0 + end;
+        x[2] = index;
+
+        if (pthread_create(&pThread[i], NULL, processWriteToFileExtra, (void *)x) != 0)
+        {
+            printf("Error creating thread\n");
+            exit(EXIT_FAILURE);
+        }
+        if (extras)
+        {
+            --extras;
+            start += keysperMap + 1;
+            end += keysperMap + 1;
+        }
+        else
+        {
+            start = end;
+            end += keysperMap;
+        }
+    }
+
+    for (i = 0; i < mapsNeeded; i++)
+    {
+        pthread_join(pThread[i], NULL);
+    }
+}
+
 //goes into shared memory and increments the number of times a word is present
 //if it is proceeded by words that are the same
 //words that are the same have their count set to 0
@@ -426,6 +491,40 @@ void finalReducer()
             i += *(shm_addr + i) - 1;
         }
     }
+}
+
+//writes to the file, but splits the work up into different threads
+void *processWriteToFileExtra(void *info)
+{
+    int start = ((int *)info)[0];
+    int end = ((int *)info)[1];
+    int index = ((int *)info)[2];
+
+    //wait until we have permission to write and then start writing
+    while (!*(shm_addr + index))
+    {
+        continue;
+    }
+
+    int i;
+    int count = 1;
+    for (i = start; i < end; ++i)
+    {
+        //if we have the same word increment the count
+        if (i + 1 < totalKeys && strcmp(oneList[i].word, oneList[i + 1].word) == 0)
+        {
+            ++count;
+            free(oneList[i].word);
+            continue;
+        }
+        processIndividualWrite(oneList[i].word, count);
+        count = 1;
+    }
+    if (index + 1 < mapsNeeded)
+    {
+        *(shm_addr + index + 1) = 1;
+    }
+    return NULL;
 }
 
 //go through the array and send each nodes string and count to processIndividualWrite
